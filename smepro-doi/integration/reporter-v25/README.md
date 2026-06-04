@@ -60,13 +60,45 @@ confirmed project ─► /api/title/analyze ─► analyzeTitleProject() ─► 
   Road" pipeline before a deck can be approved/disbursed.
 
 ## Alternative: persist in FastAPI instead of the Next route
-If you'd rather keep writes in `/api` (e.g. a `routers/land.py` endpoint), keep the
-**fold + gate in the Next analyze route** (the engine is Node) and have it forward the
-serialized deck to FastAPI for the DB write. FastAPI can cheaply re-check integrity
-without the engine — verify `sum(row.nri) == 1` and `balances is true` — then write via
-your Python DB layer. The deterministic computation stays in one place (Node); Python
-owns storage + the audit ledger. Ask and I'll generate the `land.py` router + the
-forwarding glue.
+A complete FastAPI backend is included under `api/` if you'd rather keep writes in
+`/api`. The **fold + balance gate stay in the Next analyze route** (the engine is
+Node); FastAPI owns storage + the audit ledger and re-checks integrity without the
+engine.
+
+```
+api/
+  models.py          SQLAlchemy models (same tables as schema.sql / the Prisma model)
+  schemas.py         Pydantic v2 — DeckPayload == the serializeDeck() output
+  deps.py            get_db + get_operator SEAMS (wire to your engine + session auth)
+  audit.py           deterministic SHA-256 ledger hash (canonical JSON)
+  routers/land.py    POST /api/land/title · GET /…/{id} · POST /…/decks/{id}/approve
+```
+
+Mount it:
+```python
+from .routers import land
+app.include_router(land.router)
+```
+
+To switch the Next route from Prisma to forwarding, replace the `prisma.$transaction`
+block in `app/api/title/analyze/route.js` with `lib/persistDeck.js`:
+```js
+import { persistDeck } from '../../../../lib/persistDeck';
+const saved = await persistDeck(deck, { authHeader: request.headers.get('authorization') });
+return Response.json({ ...saved, deck });
+```
+`persistDeck` POSTs the serialized deck verbatim (it matches `DeckPayload`) to
+`REPORTER_API_BASE/api/land/title`, forwarding the caller's credential so FastAPI
+derives the **same** verified operator. Integrity defense-in-depth in `land.py`:
+`balances is true`, `totalNri == 1.000000000000` (exact), and the displayed rows sum
+to 1 within the disclosed ±1e-8/owner rounding tolerance — else `409`, no write.
+
+`POST /api/land/title/decks/{id}/approve` is the landman sign-off: it gates on balance,
+stamps the approver, and writes a reproducible `ledger_hash` over the canonical deck
+snapshot (drop your WORM-ledger append where the `TODO` marks it).
+
+> Pick **one** persistence path — Prisma (default) *or* FastAPI — not both, so there's
+> a single writer per deck.
 
 ## Audit / compliance hooks (when you're ready)
 - On landman sign-off, SHA-256 the deck and write it to `doi_decks.ledger_hash` →
