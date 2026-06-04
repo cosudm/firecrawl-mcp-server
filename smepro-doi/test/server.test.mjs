@@ -16,7 +16,12 @@ const stubResult = { engine: 'claude', parties: [], documents: [{ id: 'D1', kind
 test('GET /api/health reports key presence + model', async () => {
   const s = await start({ apiKey: 'sk-test', model: 'claude-opus-4-8', extractor: async () => stubResult });
   const h = await (await fetch(`${s.base}/api/health`)).json();
-  assert.deepEqual(h, { ok: true, hasKey: true, model: 'claude-opus-4-8', engine: 'claude' });
+  assert.equal(h.ok, true);
+  assert.equal(h.hasKey, true);
+  assert.equal(h.model, 'claude-opus-4-8');
+  assert.equal(h.engine, 'claude');
+  assert.equal(h.keyInfo.prefix, 'sk-test'); // safe diagnostic, no secret
+  assert.equal(h.keyInfo.hadQuotes, false);
   await s.close();
 });
 

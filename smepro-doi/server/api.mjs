@@ -43,7 +43,10 @@ const send = (res, code, obj) => { res.writeHead(code, { 'content-type': 'applic
  */
 export function createApiServer(config = {}) {
   const extractor = config.extractor || extractWithClaude;
-  const apiKey = config.apiKey ?? process.env.ANTHROPIC_API_KEY;
+  // Defensive sanitize: strip surrounding quotes/whitespace that Windows `set VAR="..."`
+  // (or a stray trailing newline) can bake into the value and cause a 401.
+  const rawKey = config.apiKey ?? process.env.ANTHROPIC_API_KEY;
+  const apiKey = rawKey ? rawKey.trim().replace(/^["']|["']$/g, '').trim() : rawKey;
   const model = config.model || process.env.SMEPRO_MODEL || DEFAULT_MODEL;
   const root = config.root || ROOT;
 
@@ -51,7 +54,12 @@ export function createApiServer(config = {}) {
     const url = (req.url || '/').split('?')[0];
 
     // --- API ---
-    if (url === '/api/health') return send(res, 200, { ok: true, hasKey: !!apiKey, model, engine: 'claude' });
+    if (url === '/api/health') return send(res, 200, {
+      ok: true, hasKey: !!apiKey, model, engine: 'claude',
+      // Safe diagnostic only — prefix + length, never the secret. A valid key looks
+      // like { prefix: "sk-ant-", length: ~108 }. Quotes/whitespace show up here.
+      keyInfo: apiKey ? { prefix: apiKey.slice(0, 7), length: apiKey.length, hadQuotes: /^["']|["']$/.test((rawKey || '').trim()) } : null,
+    });
 
     if (url === '/api/extract') {
       if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
