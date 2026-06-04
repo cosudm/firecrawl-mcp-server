@@ -14,7 +14,7 @@
  */
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, extname, normalize } from 'node:path';
 import { extractWithClaude, DEFAULT_MODEL } from '../engine/extractors/claude.mjs';
 
@@ -82,7 +82,8 @@ export function createApiServer(config = {}) {
 }
 
 // Run directly: ANTHROPIC_API_KEY=... node server/api.mjs
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Cross-platform "is main module" check (Windows paths use backslashes/drive letters).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const PORT = Number(process.env.PORT) || 8787;
   const server = createApiServer();
   server.listen(PORT, () => {
