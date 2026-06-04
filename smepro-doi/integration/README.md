@@ -60,10 +60,21 @@ import { createTitleExtractHandler } from '@smepro/doi/integration/backend-route
 router.post('/api/title/extract',
   requireAuth, requireOperatorContext,           // your existing middleware
   express.json({ limit: '32mb' }),               // PDFs are base64
-  createTitleExtractHandler({ getApiKey: () => process.env.ANTHROPIC_API_KEY }));
+  createTitleExtractHandler({ provider: 'gemini', getApiKey: () => process.env.GEMINI_API_KEY }));
 ```
-- The Anthropic key is read from your Secret Manager / env — **never** sent to the client. (This is why moving here removes the local-key headaches.)
-- `extractWithClaude` already accepts a base64 PDF and reads it natively (incl. scanned pages), so the same route handles text and PDF.
+- **Provider is pluggable.** `provider: 'claude'` (Anthropic, default) or `provider: 'gemini'`
+  (Google) — pick whichever key you already manage. Both emit the identical
+  `ExtractionResult`, so the widget and engine are unchanged either way. A stack
+  already running `gemini-2.5-flash` (e.g. Reporter V2.5) reuses its existing key with
+  no new dependency. Can also be set via `SMEPRO_PROVIDER` / `SMEPRO_MODEL` env.
+- The model key is read from your Secret Manager / env — **never** sent to the client.
+  (This is why moving here removes the local-key headaches.)
+- **The model only reads language; it never computes a decimal.** Extraction produces a
+  *draft* with per-field confidence + source snippets; the deterministic engine folds the
+  confirmed project into a deck that sums to exactly `1.00000000`. Do not let the LLM
+  output ownership decimals directly — that defeats the auditability the engine provides.
+- Both extractors accept a base64 PDF and read it natively (incl. scanned pages via
+  vision), so the same route handles text and PDF.
 
 ## 3. Persistence + compliance
 - Run `schema.sql` as a migration (operator-scoped tables + optional RLS).
