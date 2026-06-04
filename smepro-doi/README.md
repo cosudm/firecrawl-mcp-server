@@ -57,12 +57,17 @@ npm test             # 10 tests: exact-math + Benton/Morales balance & curative
 npm run report       # text version of Steps 4 & 5
 ```
 
-## Design / branding notes
-- **Strictly light.** There is no dark theme and no dark surface; the darkest
-  background token is a pale slate. This is enforced in `web/styles.css`.
-- The header logo and the `--brand-*` tokens in `web/styles.css` are
-  **placeholders** — drop in the official SMEPro logo file and palette hexes and
-  the whole UI re-skins.
+## Design / branding
+- **Official SMEPro brand system** (`web/styles.css`): the `#003070` navy palette,
+  Fluent depth shadows, Segoe UI / Inter + Cascadia Code typography, and the
+  4-quadrant brand mark (IOS+ · Yellow Brick Road · Universal Decoding Matrix ·
+  Compliance OS) rendered as inline SVG in `web/index.html`.
+- **Light-only working surfaces.** Every data/content surface is white or pale
+  slate (`#F5F7FA`). The only deep-navy bands are the thin top utility strip and
+  the footer — official SMEPro site chrome, not working surfaces. To make the
+  chrome fully light too, flip `--utility-bg` / `--footer-accent` to a light token.
+- Brand tokens live under `:root` in `web/styles.css`; the whole UI re-skins from
+  there.
 
 ## Roadmap (next)
 - **v1:** document upload → LLM extraction writing to the Title Project schema

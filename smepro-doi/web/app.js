@@ -63,20 +63,20 @@ function renderOwnership(r) {
 
   const royalty = r.doi.royalty, wiGross = r.doi.wiGross;
   const bar = `<div class="bar">
-    <span style="width:${pct(r.doi.totalNpri)}; background:#5aa06f" title="NPRI"></span>
-    <span style="width:${pct(r.doi.mineralRoyaltyPool)}; background:#2f7fc4" title="Mineral royalty"></span>
-    <span style="width:${pct(r.doi.totalOrri)}; background:#c4892b" title="ORRI"></span>
-    <span style="width:${pct(r.doi.wiNet)}; background:#7a6cc0" title="WI net"></span>
+    <span style="width:${pct(r.doi.totalNpri)}; background:#34A853" title="NPRI"></span>
+    <span style="width:${pct(r.doi.mineralRoyaltyPool)}; background:#003070" title="Mineral royalty"></span>
+    <span style="width:${pct(r.doi.totalOrri)}; background:#6070B0" title="ORRI"></span>
+    <span style="width:${pct(r.doi.wiNet)}; background:#002040" title="WI net"></span>
   </div>`;
 
   return `<div class="card">
     <div class="card__title">How 100% of production splits (8/8 → 1.00000000)</div>
     ${bar}
     <div class="kpi-row note">
-      <span class="badge badge--ok"><span class="dot" style="background:#5aa06f"></span>NPRI ${r.doi.totalNpri.toDecimal(4)}</span>
-      <span class="badge badge--info"><span class="dot" style="background:#2f7fc4"></span>Mineral royalty ${r.doi.mineralRoyaltyPool.toDecimal(4)}</span>
-      <span class="badge badge--medium"><span class="dot" style="background:#c4892b"></span>ORRI ${r.doi.totalOrri.toDecimal(4)}</span>
-      <span class="badge badge--info"><span class="dot" style="background:#7a6cc0"></span>WI net ${r.doi.wiNet.toDecimal(4)}</span>
+      <span class="badge badge--ok"><span class="dot" style="background:#34A853"></span>NPRI ${r.doi.totalNpri.toDecimal(4)}</span>
+      <span class="badge badge--info"><span class="dot" style="background:#003070"></span>Mineral royalty ${r.doi.mineralRoyaltyPool.toDecimal(4)}</span>
+      <span class="badge badge--info" style="color:#3B5270"><span class="dot" style="background:#6070B0"></span>ORRI ${r.doi.totalOrri.toDecimal(4)}</span>
+      <span class="badge badge--info"><span class="dot" style="background:#002040"></span>WI net ${r.doi.wiNet.toDecimal(4)}</span>
     </div>
   </div>
   <div class="flow">
@@ -210,7 +210,12 @@ const STEPS = [
   { id: 'curative',  num: '5', label: 'Curative & Defects', render: renderCurative, eyebrow: 'Step 5', title: ()=>'Title Curative & Defects', sub: ()=>'Judgment calls and gaps a landman must resolve before relying on this deck.' },
 ];
 
-let ACTIVE = 'overview';
+const stepExists = (id) => STEPS.some((s) => s.id === id);
+let ACTIVE = stepExists((location.hash || '').replace('#', '')) ? location.hash.replace('#', '') : 'overview';
+window.addEventListener('hashchange', () => {
+  const id = (location.hash || '').replace('#', '');
+  if (stepExists(id) && id !== ACTIVE) { ACTIVE = id; paint(); }
+});
 function paint() {
   const nav = STEPS.map((s) => `<div class="nav__item ${s.id===ACTIVE?'is-active':''}" data-step="${s.id}">
       <span class="nav__num">${s.num}</span>${s.label}</div>`).join('');
@@ -231,7 +236,7 @@ function paint() {
 }
 function wireStepEvents() {
   document.querySelectorAll('[data-step]').forEach((el) =>
-    el.addEventListener('click', () => { ACTIVE = el.getAttribute('data-step'); paint(); }));
+    el.addEventListener('click', () => { ACTIVE = el.getAttribute('data-step'); location.hash = ACTIVE; paint(); }));
   document.querySelectorAll('[data-basis]').forEach((el) =>
     el.addEventListener('click', () => { if (!el.disabled) { BASIS = el.getAttribute('data-basis'); paint(); } }));
   const csv = $('#dl-csv');
