@@ -17,16 +17,18 @@ const read = (p) => readFile(join(root, p), 'utf8');
 function deModule(src) {
   return src
     .replace(/^\s*import\s+[^\n;]+;?\s*$/gm, '')      // drop import lines
-    .replace(/^\s*export\s+default\s+/gm, 'const __default__ = ') // export default x → const
+    .replace(/^\s*export\s+default\s+[^\n;]+;?\s*$/gm, '') // drop `export default <named>;` (named decl already in scope)
     .replace(/^\s*export\s+\{[^}]*\};?\s*$/gm, '')    // drop `export { ... }`
     .replace(/^(\s*)export\s+(class|function|const|let|var)\b/gm, '$1$2'); // export decl → decl
 }
 
-const [fraction, schema, engine, benton, app, css] = await Promise.all([
+const [fraction, schema, engine, extraction, benton, bentonSrc, app, css] = await Promise.all([
   read('engine/fraction.mjs'),
   read('engine/schema.mjs'),
   read('engine/engine.mjs'),
+  read('engine/extraction.mjs'),
   read('engine/cases/benton-morales.mjs'),
+  read('engine/cases/benton-morales-source.mjs'),
   read('web/app.js'),
   read('web/styles.css'),
 ]);
@@ -35,7 +37,9 @@ const bundledModule = [
   '/* ---- engine/fraction.mjs ---- */', deModule(fraction),
   '/* ---- engine/schema.mjs ---- */',   deModule(schema),
   '/* ---- engine/engine.mjs ---- */',   deModule(engine),
+  '/* ---- engine/extraction.mjs ---- */', deModule(extraction),
   '/* ---- engine/cases/benton-morales.mjs ---- */', deModule(benton),
+  '/* ---- engine/cases/benton-morales-source.mjs ---- */', deModule(bentonSrc),
   '/* ---- web/app.js ---- */',          deModule(app),
 ].join('\n\n');
 

@@ -10,14 +10,16 @@
  * attached to window.SMEPRO by index.html. We resolve from either location.
  */
 const ENGINE = (typeof analyzeTitleProject !== 'undefined')
-  ? { analyzeTitleProject, project: bentonMorales }
+  ? { analyzeTitleProject, project: bentonMorales, extractFromText, buildProjectFromExtraction, sourceText: bentonMoralesSource }
   : window.SMEPRO;
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const $ = (sel, root = document) => root.querySelector(sel);
 
 let BASIS = 'tract'; // 'tract' | 'unit'
-const RESULT = ENGINE.analyzeTitleProject(ENGINE.project);
+let MODE = 'analysis';      // 'analysis' | 'intake' | 'review'
+let EXTRACTION = null;      // current ExtractionResult during import
+let RESULT = ENGINE.analyzeTitleProject(ENGINE.project);
 
 /* ----------------------------------------------------------- Run sheet ----- */
 function renderRunSheet(r) {
@@ -201,6 +203,76 @@ function renderSummary(r) {
 }
 
 /* ------------------------------------------------------------- Wire --------- */
+/* --------------------------------------------------------- Intake ---------- */
+function renderIntake() {
+  const sample = ENGINE.sourceText || '';
+  return `<div class="card">
+      <div class="card__title">Import title records</div>
+      <p class="step__sub" style="margin-bottom:14px">Paste the text of deeds, leases, probates, assignments, and run-sheet notes — or load a <code>.txt</code> file.
+        The extractor reads the <em>language</em> and drafts a Title Project with a source snippet and confidence for every field; you confirm before any decimal is computed.</p>
+      <div class="toolbar">
+        <label class="btn">Load .txt file<input id="intake-file" type="file" accept=".txt,.md,.csv,text/plain" style="display:none"></label>
+        <button class="btn" id="intake-sample">Load sample (Benton / Morales)</button>
+        <span style="flex:1"></span>
+        <button class="btn btn--primary" id="extract-btn">Extract Documents →</button>
+      </div>
+      <textarea id="intake-text" spellcheck="false" style="width:100%; min-height:360px; font-family:var(--font-mono); font-size:12.5px;
+        border:1px solid var(--border-strong); border-radius:var(--r-md); padding:14px; resize:vertical; color:var(--ink); background:var(--surface-2);">${esc(sample)}</textarea>
+      <p class="note" style="margin-top:10px">Offline heuristic extractor (no data leaves the browser). The production build swaps in the Claude-API extractor
+        (<code>engine/extractors/claude.mjs</code>) for OCR’d PDFs and free-form deeds.</p>
+    </div>`;
+}
+
+/* --------------------------------------------------------- Review ---------- */
+function confChip(c) {
+  const pctv = Math.round((c.confidence || 0) * 100);
+  const cls = c.needsDecision ? 'high' : c.confidence >= 0.8 ? 'ok' : c.confidence >= 0.6 ? 'info' : 'medium';
+  return `<span class="badge badge--${cls}">${c.needsDecision ? 'Needs decision' : pctv + '%'}</span>`;
+}
+function fieldRow(di, fi, f) {
+  const editable = typeof f.value !== 'object';
+  const valCell = editable
+    ? `<input class="rv-input" data-d="${di}" data-f="${fi}" value="${esc(f.value)}" />`
+    : `<code class="src">${esc(JSON.stringify(f.value))}</code>`;
+  return `<tr class="${f.needsDecision ? 'rv-needs' : ''}">
+      <td><label class="rv-inc"><input type="checkbox" data-d="${di}" data-f="${fi}" ${f.status === 'rejected' ? '' : 'checked'}/> ${esc(f.label)}</label></td>
+      <td>${valCell}</td>
+      <td>${confChip(f)}</td>
+      <td class="src" title="${esc(f.snippet || '')}">${esc((f.snippet || '').slice(0, 70))}${(f.snippet || '').length > 70 ? '…' : ''}</td>
+    </tr>`;
+}
+function renderReview() {
+  const r = EXTRACTION;
+  const need = r.documents.reduce((a, d) => a + d.fields.filter((f) => f.needsDecision).length, 0);
+  const total = r.documents.reduce((a, d) => a + d.fields.length, 0);
+  const cards = r.documents.map((d, di) => `
+    <div class="card">
+      <div class="flag__head" style="margin-bottom:12px">
+        <span class="type-pill" data-t="Working Interest (NRI)">${esc(prettyKind(d.kind))}</span>
+        <span class="flag__title">${esc(d.title)}</span>
+        <span class="flag__code">${esc(d.id)}</span>
+      </div>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Field (include?)</th><th>Value</th><th>Confidence</th><th>Source snippet</th></tr></thead>
+        <tbody>${d.fields.map((f, fi) => fieldRow(di, fi, f)).join('')}</tbody>
+      </table></div>
+    </div>`).join('');
+  return `<div class="summary-grid">
+      <div class="stat"><div class="stat__label">Documents</div><div class="stat__value">${r.documents.length}</div></div>
+      <div class="stat"><div class="stat__label">Fields extracted</div><div class="stat__value">${total}</div></div>
+      <div class="stat"><div class="stat__label">Need your decision</div><div class="stat__value" style="color:${need?'#B4530E':'var(--smepro-success)'}">${need}</div></div>
+      <div class="stat"><div class="stat__label">Parties</div><div class="stat__value">${r.parties.length}</div></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="back-intake">← Back to text</button>
+      <span class="note">Edit any value inline; untick to exclude. Amber rows are SME judgment calls.</span>
+      <span style="flex:1"></span>
+      <button class="btn btn--primary" id="build-btn">Build DOI Analysis →</button>
+    </div>
+    ${r.notes && r.notes.length ? `<div class="flag flag--medium"><div class="flag__rail"></div><div class="flag__body"><div class="flag__detail">${r.notes.map(esc).join('<br/>')}</div></div></div>` : ''}
+    ${cards}`;
+}
+
 const STEPS = [
   { id: 'overview',  num: '•', label: 'Overview',          render: renderSummary,   eyebrow: 'Title Project', title: (r)=>esc(r.project.name), sub: (r)=>esc(r.project.tract.legal) },
   { id: 'runsheet',  num: '1', label: 'Run Sheet',         render: renderRunSheet,  eyebrow: 'Step 1', title: ()=>'Chronological Run Sheet', sub: ()=>'Every instrument in date order, with its effect on the estate.' },
@@ -214,31 +286,58 @@ const stepExists = (id) => STEPS.some((s) => s.id === id);
 let ACTIVE = stepExists((location.hash || '').replace('#', '')) ? location.hash.replace('#', '') : 'overview';
 window.addEventListener('hashchange', () => {
   const id = (location.hash || '').replace('#', '');
-  if (stepExists(id) && id !== ACTIVE) { ACTIVE = id; paint(); }
+  if (MODE === 'analysis' && stepExists(id) && id !== ACTIVE) { ACTIVE = id; paint(); }
 });
-function paint() {
-  const nav = STEPS.map((s) => `<div class="nav__item ${s.id===ACTIVE?'is-active':''}" data-step="${s.id}">
-      <span class="nav__num">${s.num}</span>${s.label}</div>`).join('');
-  $('#nav-items').innerHTML = `<div class="nav__group">Workflow</div>${nav}`;
 
-  const s = STEPS.find((x) => x.id === ACTIVE);
+function paint() {
+  // --- Nav ---
+  const intakeActive = MODE === 'intake' || MODE === 'review';
+  const steps = STEPS.map((s) => `<div class="nav__item ${MODE==='analysis' && s.id===ACTIVE?'is-active':''}" data-step="${s.id}">
+      <span class="nav__num">${s.num}</span>${s.label}</div>`).join('');
+  $('#nav-items').innerHTML = `
+    <div class="nav__group">Import</div>
+    <div class="nav__item ${intakeActive?'is-active':''}" data-go="intake"><span class="nav__num">↑</span>Intake &amp; Extract</div>
+    <hr class="nav__hr"/>
+    <div class="nav__group">Workflow</div>${steps}
+    <hr class="nav__hr"/>
+    <div class="nav__legal">${esc(RESULT.project.name)}</div>`;
+
+  // --- Main ---
+  let head, bodyHtml;
+  if (MODE === 'intake') {
+    head = { eyebrow: 'Import', title: 'Intake &amp; Extract', sub: 'Bring title records in, then review what was extracted before computing decimals.' };
+    bodyHtml = renderIntake();
+  } else if (MODE === 'review') {
+    head = { eyebrow: 'Import · Review & Confirm', title: 'Confirm Extracted Facts', sub: 'Every field shows its source snippet and a confidence score. Resolve the amber judgment calls, then build the analysis.' };
+    bodyHtml = renderReview();
+  } else {
+    const s = STEPS.find((x) => x.id === ACTIVE) || STEPS[0];
+    head = { eyebrow: s.eyebrow, title: s.title(RESULT), sub: s.sub(RESULT) };
+    bodyHtml = s.render(RESULT);
+  }
   $('#main').innerHTML = `<div class="step is-active">
       <div class="step__head">
-        <div class="step__eyebrow">${s.eyebrow}</div>
-        <h1 class="step__title">${s.title(RESULT)}</h1>
-        <p class="step__sub">${s.sub(RESULT)}</p>
+        <div class="step__eyebrow">${head.eyebrow}</div>
+        <h1 class="step__title">${head.title}</h1>
+        <p class="step__sub">${head.sub}</p>
       </div>
-      ${s.render(RESULT)}
+      ${bodyHtml}
       <div class="disclaimer">Title-examination work product for landman/analyst review. Not a title opinion or legal advice.
         Internal arithmetic is exact (rational); displayed decimals are round-half-up to 8 places.</div>
     </div>`;
-  wireStepEvents();
+  wireEvents();
 }
-function wireStepEvents() {
+
+function goAnalysis(stepId) { MODE = 'analysis'; ACTIVE = stepId || 'overview'; if (history.replaceState) history.replaceState(null, '', '#' + ACTIVE); paint(); }
+
+function wireEvents() {
+  document.querySelectorAll('[data-go]').forEach((el) =>
+    el.addEventListener('click', () => { MODE = el.getAttribute('data-go'); paint(); }));
   document.querySelectorAll('[data-step]').forEach((el) =>
-    el.addEventListener('click', () => { ACTIVE = el.getAttribute('data-step'); location.hash = ACTIVE; paint(); }));
+    el.addEventListener('click', () => goAnalysis(el.getAttribute('data-step'))));
   document.querySelectorAll('[data-basis]').forEach((el) =>
     el.addEventListener('click', () => { if (!el.disabled) { BASIS = el.getAttribute('data-basis'); paint(); } }));
+
   const csv = $('#dl-csv');
   if (csv) csv.addEventListener('click', () => {
     const blob = new Blob([toCsv(RESULT)], { type: 'text/csv' });
@@ -246,6 +345,45 @@ function wireStepEvents() {
     a.href = URL.createObjectURL(blob);
     a.download = `DOI_${RESULT.project.name.replace(/[^a-z0-9]+/gi, '_')}_${BASIS}.csv`;
     a.click(); URL.revokeObjectURL(a.href);
+  });
+
+  // Intake
+  const sampleBtn = $('#intake-sample');
+  if (sampleBtn) sampleBtn.addEventListener('click', () => { $('#intake-text').value = ENGINE.sourceText || ''; });
+  const fileInput = $('#intake-file');
+  if (fileInput) fileInput.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { $('#intake-text').value = String(reader.result || ''); };
+    reader.readAsText(file);
+  });
+  const extractBtn = $('#extract-btn');
+  if (extractBtn) extractBtn.addEventListener('click', () => {
+    const text = $('#intake-text').value || '';
+    if (!text.trim()) { alert('Paste or load some title text first.'); return; }
+    try { EXTRACTION = ENGINE.extractFromText(text); MODE = 'review'; paint(); }
+    catch (err) { alert('Extraction failed: ' + err.message); }
+  });
+
+  // Review
+  const back = $('#back-intake');
+  if (back) back.addEventListener('click', () => { MODE = 'intake'; paint(); });
+  document.querySelectorAll('.rv-input').forEach((el) => el.addEventListener('input', () => {
+    const f = EXTRACTION.documents[+el.dataset.d].fields[+el.dataset.f];
+    f.value = el.value; f.status = 'edited';
+  }));
+  document.querySelectorAll('.rv-inc input').forEach((el) => el.addEventListener('change', () => {
+    const f = EXTRACTION.documents[+el.dataset.d].fields[+el.dataset.f];
+    f.status = el.checked ? (f.status === 'rejected' ? 'pending' : f.status) : 'rejected';
+  }));
+  const build = $('#build-btn');
+  if (build) build.addEventListener('click', () => {
+    try {
+      const project = ENGINE.buildProjectFromExtraction(EXTRACTION);
+      RESULT = ENGINE.analyzeTitleProject(project);
+      $('#asof').textContent = RESULT.project.asOfDate || '';
+      goAnalysis('overview');
+    } catch (err) { alert('Could not build analysis:\n' + err.message); }
   });
 }
 

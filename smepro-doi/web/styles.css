@@ -206,6 +206,14 @@ table.data tfoot td { padding: 12px 14px; font-weight: 700; background: rgba(0,4
 .type-pill[data-t="ORRI"]                       { background: rgba(96,112,176,.16); color: #3B5270; }
 .type-pill[data-t="Working Interest (NRI)"]     { background: rgba(16,48,96,.10);   color: var(--smepro-navy-mid); }
 
+/* Review & Confirm rows */
+table.data tr.rv-needs td { background: rgba(193,108,0,.07); }
+table.data tr.rv-needs td:first-child { box-shadow: inset 3px 0 0 #B4530E; }
+.rv-inc { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-weight: 600; }
+.rv-input { width: 100%; font-family: var(--font-mono); font-size: 12.5px; padding: 5px 8px;
+  border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); }
+.rv-input:focus { outline: none; border-color: var(--smepro-navy-light); box-shadow: 0 0 0 2px rgba(0,64,128,.12); }
+
 /* --------------------------------------------------------- Run sheet ------- */
 .timeline { position: relative; margin-left: 8px; padding-left: 26px; }
 .timeline::before { content: ""; position: absolute; left: 7px; top: 4px; bottom: 4px; width: 2px; background: var(--border-strong); }

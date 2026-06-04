@@ -86,8 +86,11 @@
   <script type="module">
     import { analyzeTitleProject } from '/engine/engine.mjs';
     import { bentonMorales } from '/engine/cases/benton-morales.mjs';
+    import { bentonMoralesSource } from '/engine/cases/benton-morales-source.mjs';
+    import { extractFromText, buildProjectFromExtraction } from '/engine/extraction.mjs';
     import { Fraction } from '/engine/fraction.mjs';
-    window.SMEPRO = { analyzeTitleProject, project: bentonMorales, Fraction };
+    window.SMEPRO = { analyzeTitleProject, project: bentonMorales, Fraction,
+      extractFromText, buildProjectFromExtraction, sourceText: bentonMoralesSource };
     await import('/web/app.js');
   </script>
 </body>
