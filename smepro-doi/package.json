@@ -8,6 +8,7 @@
     "test": "node --test",
     "build": "node build.mjs",
     "serve": "node serve.mjs",
+    "start": "node server/api.mjs",
     "report": "node engine/cli.mjs"
   },
   "engines": { "node": ">=22" }

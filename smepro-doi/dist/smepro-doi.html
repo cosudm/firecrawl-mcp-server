@@ -1902,6 +1902,11 @@ let MODE = 'analysis';      // 'analysis' | 'intake' | 'review'
 let EXTRACTION = null;      // current ExtractionResult during import
 let RESULT = ENGINE.analyzeTitleProject(ENGINE.project);
 
+// v1.1 import state
+let BACKEND = { available: false, hasKey: false, model: null };
+let INTAKE_TEXT = null;     // current Intake textarea content (persists across repaints)
+let INTAKE_PDF = null;      // { name, base64, mediaType } when a PDF is loaded
+
 /* ----------------------------------------------------------- Run sheet ----- */
 function renderRunSheet(r) {
   const items = r.runSheet.map((d) => {
@@ -2085,22 +2090,77 @@ function renderSummary(r) {
 
 /* ------------------------------------------------------------- Wire --------- */
 /* --------------------------------------------------------- Intake ---------- */
+const isHttp = () => typeof location !== 'undefined' && /^https?:$/.test(location.protocol);
+
+async function probeBackend() {
+  if (!isHttp()) return;
+  try {
+    const h = await (await fetch('/api/health')).json();
+    BACKEND = { available: true, hasKey: !!h.hasKey, model: h.model };
+  } catch { BACKEND = { available: false, hasKey: false, model: null }; }
+  if (MODE === 'intake') paint();
+}
+
+function abToBase64(buf) {
+  const bytes = new Uint8Array(buf); let bin = ''; const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  return btoa(bin);
+}
+let _pdfjs = null;
+async function loadPdfJs() {
+  if (_pdfjs) return _pdfjs;
+  const v = '4.7.76';
+  const lib = await import(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.min.mjs`);
+  lib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.worker.min.mjs`;
+  return (_pdfjs = lib);
+}
+async function pdfToText(arrayBuffer) {
+  const pdfjs = await loadPdfJs();
+  const doc = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map((it) => it.str).join(' ') + '\n';
+  }
+  return text.trim();
+}
+async function backendExtract(payload) {
+  const res = await fetch('/api/extract', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+  return res.json();
+}
+
+function backendChip() {
+  if (!isHttp()) return `<span class="badge badge--medium" title="Open via the backend (npm start) to enable AI">Offline file · heuristic only</span>`;
+  if (!BACKEND.available) return `<span class="badge badge--medium">AI backend: not detected</span>`;
+  if (!BACKEND.hasKey) return `<span class="badge badge--info">AI backend: connected · no key set</span>`;
+  return `<span class="badge badge--ok">AI backend: ready · ${esc(BACKEND.model || 'claude')}</span>`;
+}
+
 function renderIntake() {
-  const sample = ENGINE.sourceText || '';
+  const text = INTAKE_TEXT != null ? INTAKE_TEXT : (ENGINE.sourceText || '');
+  const aiReady = isHttp() && BACKEND.available && BACKEND.hasKey;
+  const pdfNote = INTAKE_PDF
+    ? `PDF loaded: <b>${esc(INTAKE_PDF.name)}</b> (~${Math.round(INTAKE_PDF.base64.length * 0.75 / 1024)} KB). “Extract with Claude” reads the PDF directly (incl. scanned pages); “Extract (heuristic)” uses the text below.`
+    : 'Paste text, or load a <code>.txt</code> / <code>.pdf</code>. Text-PDFs are parsed in-browser; scanned PDFs need the Claude backend.';
   return `<div class="card">
       <div class="card__title">Import title records</div>
-      <p class="step__sub" style="margin-bottom:14px">Paste the text of deeds, leases, probates, assignments, and run-sheet notes — or load a <code>.txt</code> file.
-        The extractor reads the <em>language</em> and drafts a Title Project with a source snippet and confidence for every field; you confirm before any decimal is computed.</p>
+      <p class="step__sub" style="margin-bottom:12px">Two ways in: the <b>offline heuristic</b> (paste / <code>.txt</code> / text-PDF), or <b>Claude AI</b> via the backend
+        (handles scanned PDFs and free-form deeds). Both produce the same review with a source snippet and confidence per field.</p>
       <div class="toolbar">
-        <label class="btn">Load .txt file<input id="intake-file" type="file" accept=".txt,.md,.csv,text/plain" style="display:none"></label>
-        <button class="btn" id="intake-sample">Load sample (Benton / Morales)</button>
+        <label class="btn">Load file (.txt/.pdf)<input id="intake-file" type="file" accept=".txt,.md,.csv,.pdf,text/plain,application/pdf" style="display:none"></label>
+        <button class="btn" id="intake-sample">Load sample</button>
+        ${backendChip()}
         <span style="flex:1"></span>
-        <button class="btn btn--primary" id="extract-btn">Extract Documents →</button>
+        <button class="btn" id="extract-btn">Extract (heuristic)</button>
+        <button class="btn btn--primary" id="extract-ai-btn" ${aiReady ? '' : 'disabled'} title="${aiReady ? 'Extract with Claude' : 'Run the backend with ANTHROPIC_API_KEY to enable'}">Extract with Claude&nbsp;▷</button>
       </div>
-      <textarea id="intake-text" spellcheck="false" style="width:100%; min-height:360px; font-family:var(--font-mono); font-size:12.5px;
-        border:1px solid var(--border-strong); border-radius:var(--r-md); padding:14px; resize:vertical; color:var(--ink); background:var(--surface-2);">${esc(sample)}</textarea>
-      <p class="note" style="margin-top:10px">Offline heuristic extractor (no data leaves the browser). The production build swaps in the Claude-API extractor
-        (<code>engine/extractors/claude.mjs</code>) for OCR’d PDFs and free-form deeds.</p>
+      <div id="intake-hint" class="note" style="margin-bottom:8px">${pdfNote}</div>
+      <textarea id="intake-text" spellcheck="false" style="width:100%; min-height:340px; font-family:var(--font-mono); font-size:12.5px;
+        border:1px solid var(--border-strong); border-radius:var(--r-md); padding:14px; resize:vertical; color:var(--ink); background:var(--surface-2);">${esc(text)}</textarea>
+      <p class="note" style="margin-top:10px">Heuristic mode keeps data in the browser. AI mode sends the document to your backend (<code>server/api.mjs</code>),
+        which calls Claude with the key held server-side.</p>
     </div>`;
 }
 
@@ -2164,10 +2224,13 @@ const STEPS = [
 ];
 
 const stepExists = (id) => STEPS.some((s) => s.id === id);
-let ACTIVE = stepExists((location.hash || '').replace('#', '')) ? location.hash.replace('#', '') : 'overview';
+const initHash = (location.hash || '').replace('#', '');
+let ACTIVE = stepExists(initHash) ? initHash : 'overview';
+if (initHash === 'intake') MODE = 'intake';
 window.addEventListener('hashchange', () => {
   const id = (location.hash || '').replace('#', '');
-  if (MODE === 'analysis' && stepExists(id) && id !== ACTIVE) { ACTIVE = id; paint(); }
+  if (id === 'intake') { MODE = 'intake'; paint(); }
+  else if (stepExists(id)) { MODE = 'analysis'; ACTIVE = id; paint(); }
 });
 
 function paint() {
@@ -2213,7 +2276,7 @@ function goAnalysis(stepId) { MODE = 'analysis'; ACTIVE = stepId || 'overview'; 
 
 function wireEvents() {
   document.querySelectorAll('[data-go]').forEach((el) =>
-    el.addEventListener('click', () => { MODE = el.getAttribute('data-go'); paint(); }));
+    el.addEventListener('click', () => { MODE = el.getAttribute('data-go'); if (MODE === 'intake' && history.replaceState) history.replaceState(null, '', '#intake'); paint(); }));
   document.querySelectorAll('[data-step]').forEach((el) =>
     el.addEventListener('click', () => goAnalysis(el.getAttribute('data-step'))));
   document.querySelectorAll('[data-basis]').forEach((el) =>
@@ -2229,21 +2292,49 @@ function wireEvents() {
   });
 
   // Intake
+  const ta = $('#intake-text');
+  if (ta) ta.addEventListener('input', () => { INTAKE_TEXT = ta.value; });
   const sampleBtn = $('#intake-sample');
-  if (sampleBtn) sampleBtn.addEventListener('click', () => { $('#intake-text').value = ENGINE.sourceText || ''; });
+  if (sampleBtn) sampleBtn.addEventListener('click', () => { INTAKE_TEXT = ENGINE.sourceText || ''; INTAKE_PDF = null; paint(); });
+  const hint = (html) => { const h = $('#intake-hint'); if (h) h.innerHTML = html; };
+
   const fileInput = $('#intake-file');
-  if (fileInput) fileInput.addEventListener('change', (e) => {
+  if (fileInput) fileInput.addEventListener('change', async (e) => {
     const file = e.target.files && e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => { $('#intake-text').value = String(reader.result || ''); };
-    reader.readAsText(file);
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    if (isPdf) {
+      const buf = await file.arrayBuffer();
+      INTAKE_PDF = { name: file.name, base64: abToBase64(buf), mediaType: 'application/pdf' };
+      hint(`PDF loaded: <b>${esc(file.name)}</b>. Reading text in-browser…`);
+      try { const txt = await pdfToText(buf.slice(0)); INTAKE_TEXT = txt; paint(); }
+      catch { hint(`PDF loaded: <b>${esc(file.name)}</b>. In-browser text layer unavailable (likely scanned or offline) — use <b>Extract with Claude</b>.`); }
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => { INTAKE_TEXT = String(reader.result || ''); INTAKE_PDF = null; paint(); };
+      reader.readAsText(file);
+    }
   });
+
   const extractBtn = $('#extract-btn');
   if (extractBtn) extractBtn.addEventListener('click', () => {
-    const text = $('#intake-text').value || '';
-    if (!text.trim()) { alert('Paste or load some title text first.'); return; }
+    const text = ($('#intake-text') && $('#intake-text').value) || '';
+    if (!text.trim()) { alert('Paste or load some title text first (heuristic mode needs a text layer).'); return; }
     try { EXTRACTION = ENGINE.extractFromText(text); MODE = 'review'; paint(); }
     catch (err) { alert('Extraction failed: ' + err.message); }
+  });
+
+  const aiBtn = $('#extract-ai-btn');
+  if (aiBtn) aiBtn.addEventListener('click', async () => {
+    aiBtn.disabled = true; const label = aiBtn.innerHTML; aiBtn.innerHTML = 'Extracting…';
+    try {
+      const text = ($('#intake-text') && $('#intake-text').value) || '';
+      const payload = INTAKE_PDF ? { pdfBase64: INTAKE_PDF.base64, mediaType: INTAKE_PDF.mediaType, text: text || undefined } : { text };
+      EXTRACTION = await backendExtract(payload);
+      MODE = 'review'; paint();
+    } catch (err) {
+      aiBtn.disabled = false; aiBtn.innerHTML = label;
+      alert('Claude extraction failed:\n' + err.message);
+    }
   });
 
   // Review
@@ -2270,6 +2361,7 @@ function wireEvents() {
 
 $('#asof').textContent = RESULT.project.asOfDate || '';
 paint();
+probeBackend();
 
 </script>
 </body>

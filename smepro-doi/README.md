@@ -30,6 +30,18 @@ npm run serve        # → http://localhost:5173
 ```
 Edit anything under `engine/` or `web/`; refresh the browser.
 
+### Option C — with AI extraction (backend) 🤖
+Serves the app **and** the extraction API from one origin; the API key stays
+server-side. Required for scanned PDFs and free-form deeds.
+```bash
+cd smepro-doi
+export ANTHROPIC_API_KEY=sk-ant-...   # see .env.example
+npm start                             # → http://localhost:8787
+```
+Without a key the server still runs — the app loads, the heuristic extractor
+works, and `/api/extract` returns a clear 503 (the UI disables the AI button and
+shows “no key set”).
+
 ### Rebuild the single file after changes
 ```bash
 npm run build        # regenerates dist/smepro-doi.html
@@ -45,7 +57,8 @@ npm run build        # regenerates dist/smepro-doi.html
 | `engine/schema.mjs` | The typed **Title Project** data model (the contract the UI and future extraction bind to). |
 | `engine/engine.mjs` | Deterministic chronological fold → ownership ledgers → DOI deck → curative defect rules. **All math lives here; the UI does none.** |
 | `engine/extraction.mjs` | **Import pipeline:** offline heuristic extractor (raw text → draft schema with per-field source snippet + confidence) and `buildProjectFromExtraction()`. |
-| `engine/extractors/claude.mjs` | **Production extraction adapter** — Claude Messages API with schema-constrained tool use + prompt caching. Same `ExtractionResult` contract as the heuristic; use for OCR'd PDFs / free-form deeds. Runs server-side (never ship the key to the browser). |
+| `engine/extractors/claude.mjs` | **Production extraction adapter** — Claude Messages API with schema-constrained tool use + prompt caching. Accepts text **or a base64 PDF** (Claude reads the document natively, incl. scanned pages via vision). Same `ExtractionResult` contract. Server-side only. |
+| `server/api.mjs` | Backend: serves the app + `GET /api/health` + `POST /api/extract` (`{text}` or `{pdfBase64}`). Holds the key. Degrades to 503 when no key. |
 | `engine/cases/benton-morales.mjs` | The seed case (the 8 supplied instruments). |
 | `engine/cases/benton-morales-source.mjs` | Raw-text version of the case, used to exercise the extractor and prefill Intake. |
 | `engine/cli.mjs` | `npm run report` — prints the 5-step analysis in the terminal. |
@@ -89,8 +102,17 @@ const result  = await extractWithClaude(rawText, { apiKey: process.env.ANTHROPIC
 const project = buildProjectFromExtraction(result); // after human confirmation
 ```
 
+## Import options at a glance
+| Path | Input | Where it runs | Handles |
+|------|-------|---------------|---------|
+| Heuristic | paste / `.txt` / text-PDF | in-browser (offline) | labeled run-sheet / abstract text |
+| Claude AI | `.pdf` / `.txt` / text | backend → Claude | scanned PDFs, free-form deeds |
+
+Text-PDFs are parsed in-browser via pdf.js (loaded lazily from CDN when online);
+scanned PDFs are sent to the backend and read by Claude directly.
+
 ## Roadmap (next)
-- **v1.1:** wire the Claude adapter behind a backend; PDF/OCR upload (pdf.js);
-  rich editors for object fields (heir splits, ORRI carve-outs).
+- **v1.2:** rich editors for object fields (heir splits, ORRI carve-outs);
+  multi-file batch intake; persist projects.
 - **v2:** multi-tract / full-unit roll-ups, county-records ingestion, production
   & revenue overlay, attorney sign-off + certified export.

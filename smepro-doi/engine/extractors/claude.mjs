@@ -97,11 +97,27 @@ export const EXTRACTION_TOOL = {
 };
 
 /**
- * @param {string} rawText
+ * Build the user message content. Accepts plain text, a PDF (base64 — Claude reads
+ * the document natively, including scanned pages via vision), or both.
+ * @param {string|{text?:string, pdfBase64?:string, mediaType?:string}} input
+ */
+function userContent(input) {
+  const inp = typeof input === 'string' ? { text: input } : (input || {});
+  /** @type {any[]} */ const blocks = [];
+  if (inp.pdfBase64) {
+    blocks.push({ type: 'document', source: { type: 'base64', media_type: inp.mediaType || 'application/pdf', data: inp.pdfBase64 } });
+  }
+  const lead = inp.pdfBase64 ? 'Extract every title instrument from the attached document.' : 'Extract every title instrument from the following records:';
+  blocks.push({ type: 'text', text: inp.text ? `${lead}\n\n${inp.text}` : lead });
+  return blocks;
+}
+
+/**
+ * @param {string|{text?:string, pdfBase64?:string, mediaType?:string}} input  Text and/or a base64 PDF.
  * @param {{ apiKey: string, model?: string, fetchImpl?: typeof fetch, maxTokens?: number }} opts
  * @returns {Promise<import('../extraction.mjs').ExtractionResult>}
  */
-export async function extractWithClaude(rawText, opts) {
+export async function extractWithClaude(input, opts) {
   const { apiKey, model = DEFAULT_MODEL, fetchImpl = fetch, maxTokens = 8000 } = opts || {};
   if (!apiKey) throw new Error('extractWithClaude: apiKey is required');
 
@@ -119,7 +135,7 @@ export async function extractWithClaude(rawText, opts) {
       system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       tools: [{ ...EXTRACTION_TOOL, cache_control: { type: 'ephemeral' } }],
       tool_choice: { type: 'tool', name: EXTRACTION_TOOL.name },
-      messages: [{ role: 'user', content: `Extract every title instrument from the following records:\n\n${rawText}` }],
+      messages: [{ role: 'user', content: userContent(input) }],
     }),
   });
 
