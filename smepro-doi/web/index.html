@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SMEPro · DOI Builder</title>
+  <link rel="stylesheet" href="/web/styles.css" />
+  <!-- @brand: replace the inline SVG and palette tokens in styles.css with official SMEPro assets -->
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <!-- SMEPro placeholder wordmark — swap for the official logo file -->
+      <svg class="brand__logo" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" aria-label="SMEPro">
+        <rect x="2" y="2" width="40" height="40" rx="10" fill="#0b3b5e"/>
+        <path d="M22 9l11 6.5v13L22 35 11 28.5v-13L22 9z" fill="none" stroke="#c4892b" stroke-width="2.2"/>
+        <path d="M22 15v14M16 19l6 4 6-4" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="brand__title"><b>SMEPro</b><span>DOI&nbsp;Builder</span></span>
+    </div>
+    <div class="app-header__spacer"></div>
+    <div class="app-header__meta">Title-to-Decimal Engine · <b>v0 MVP</b><br/>Analysis as of <b id="asof"></b></div>
+  </header>
+
+  <div class="layout">
+    <nav class="nav" id="nav-items"></nav>
+    <main class="main" id="main"></main>
+  </div>
+
+  <script type="module">
+    import { analyzeTitleProject } from '/engine/engine.mjs';
+    import { bentonMorales } from '/engine/cases/benton-morales.mjs';
+    import { Fraction } from '/engine/fraction.mjs';
+    window.SMEPRO = { analyzeTitleProject, project: bentonMorales, Fraction };
+    await import('/web/app.js');
+  </script>
+</body>
+</html>

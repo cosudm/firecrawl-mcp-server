@@ -1,0 +1,213 @@
+/* ============================================================================
+   SMEPro DOI Builder — Design System
+   Light-only. There is intentionally NO dark theme and NO dark surface anywhere;
+   the darkest background token is a pale slate (#eef2f6). Swap the brand tokens
+   below for the official SMEPro palette/logo when available.
+   ========================================================================== */
+
+:root {
+  /* --- Brand (placeholder SMEPro palette — replace with official values) --- */
+  --brand-primary:      #0b3b5e;   /* deep petroleum navy */
+  --brand-primary-700:  #0e4a76;
+  --brand-primary-600:  #14598c;
+  --brand-accent:       #c4892b;   /* refinery amber */
+  --brand-accent-soft:  #f7ead2;
+
+  /* --- Neutrals (light only) --- */
+  --bg:            #f4f7fa;        /* app canvas */
+  --surface:       #ffffff;        /* cards */
+  --surface-2:     #f8fafc;        /* subtle panels */
+  --surface-3:     #eef2f6;        /* darkest allowed surface */
+  --border:        #e1e8ef;
+  --border-strong: #cdd8e3;
+
+  --ink:        #14222e;           /* primary text */
+  --ink-2:      #3d4f5d;           /* secondary text */
+  --ink-3:      #6b7b88;           /* muted */
+
+  /* --- Status --- */
+  --ok:        #1f8a52;  --ok-bg:        #e7f5ec;
+  --critical:  #b3261e;  --critical-bg:  #fbe9e8;
+  --high:      #c4541b;  --high-bg:      #fcecdf;
+  --medium:    #9a6a00;  --medium-bg:    #fbf2da;
+  --info:      #2b6cb0;  --info-bg:      #e8f1fb;
+
+  /* --- Geometry --- */
+  --radius:     10px;
+  --radius-sm:  7px;
+  --radius-lg:  16px;
+  --shadow-sm:  0 1px 2px rgba(16, 40, 60, .06), 0 1px 3px rgba(16, 40, 60, .05);
+  --shadow-md:  0 4px 14px rgba(16, 40, 60, .08), 0 2px 6px rgba(16, 40, 60, .05);
+  --shadow-lg:  0 14px 40px rgba(16, 40, 60, .14);
+
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: "Georgia", "Times New Roman", serif;
+  --font-mono: "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum" 1, "cv05" 1;
+}
+
+/* ----------------------------------------------------------- App shell ----- */
+.app-header {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 18px;
+  padding: 14px 28px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand__logo { height: 34px; width: auto; display: block; }
+.brand__title { display: flex; flex-direction: column; line-height: 1.1; }
+.brand__title b { font-size: 16px; letter-spacing: .2px; color: var(--brand-primary); }
+.brand__title span { font-size: 11px; color: var(--ink-3); letter-spacing: .8px; text-transform: uppercase; }
+.app-header__spacer { flex: 1; }
+.app-header__meta { font-size: 12px; color: var(--ink-3); text-align: right; }
+.app-header__meta b { color: var(--ink-2); }
+
+.layout { display: grid; grid-template-columns: 248px 1fr; min-height: calc(100vh - 63px); }
+
+/* --------------------------------------------------------------- Nav ------- */
+.nav {
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  padding: 18px 12px;
+  position: sticky; top: 63px; align-self: start; height: calc(100vh - 63px);
+}
+.nav__group { font-size: 11px; text-transform: uppercase; letter-spacing: .7px; color: var(--ink-3); margin: 6px 10px 8px; }
+.nav__item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; margin: 2px 0; border-radius: var(--radius-sm);
+  font-size: 14px; color: var(--ink-2); cursor: pointer; user-select: none;
+  border: 1px solid transparent;
+}
+.nav__item:hover { background: var(--surface-2); color: var(--ink); }
+.nav__item.is-active { background: var(--brand-accent-soft); color: var(--brand-primary); font-weight: 600; border-color: #efdcb8; }
+.nav__num { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-3); color: var(--ink-2);
+  display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+.nav__item.is-active .nav__num { background: var(--brand-primary); color: #fff; }
+
+/* ------------------------------------------------------------- Main -------- */
+.main { padding: 28px 36px 80px; max-width: 1180px; }
+.step { display: none; animation: fade .25s ease; }
+.step.is-active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.step__head { margin-bottom: 18px; }
+.step__eyebrow { font-size: 12px; letter-spacing: .8px; text-transform: uppercase; color: var(--brand-accent); font-weight: 700; }
+.step__title { font-size: 26px; margin: 4px 0 6px; color: var(--ink); letter-spacing: -.3px; }
+.step__sub { color: var(--ink-2); font-size: 14.5px; max-width: 760px; }
+
+/* ------------------------------------------------------------ Cards -------- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); padding: 20px 22px; margin-bottom: 18px; }
+.card__title { font-size: 13px; text-transform: uppercase; letter-spacing: .6px; color: var(--ink-3); margin: 0 0 14px; font-weight: 700; }
+
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; box-shadow: var(--shadow-sm); }
+.stat__label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-3); }
+.stat__value { font-size: 22px; font-weight: 700; color: var(--brand-primary); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.stat__hint { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+/* ------------------------------------------------------------ Badges ------- */
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; border: 1px solid transparent; }
+.badge--ok       { background: var(--ok-bg);       color: var(--ok);       border-color: #c4e6cf; }
+.badge--critical { background: var(--critical-bg); color: var(--critical); border-color: #f1c9c6; }
+.badge--high     { background: var(--high-bg);     color: var(--high);     border-color: #f4d2bb; }
+.badge--medium   { background: var(--medium-bg);   color: var(--medium);   border-color: #ecdcab; }
+.badge--info     { background: var(--info-bg);     color: var(--info);     border-color: #c6ddf3; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* ------------------------------------------------------------ Tables ------- */
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+table.data { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--surface); }
+table.data thead th {
+  text-align: left; padding: 11px 14px; background: var(--surface-3); color: var(--ink-2);
+  font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border-strong);
+  position: sticky; top: 0; white-space: nowrap;
+}
+table.data tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--ink); vertical-align: top; }
+table.data tbody tr:last-child td { border-bottom: none; }
+table.data tbody tr:hover { background: var(--surface-2); }
+table.data .num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); text-align: right; white-space: nowrap; }
+table.data tfoot td { padding: 12px 14px; font-weight: 700; background: var(--surface-3); border-top: 2px solid var(--border-strong); }
+.muted { color: var(--ink-3); }
+.src { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+
+.type-pill { font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 6px; white-space: nowrap; }
+.type-pill[data-t="Royalty (NPRI)"]            { background: #eef4ec; color: #2f6b3e; }
+.type-pill[data-t="Mineral (Lessor Royalty)"]  { background: #eaf1f8; color: #1f5a93; }
+.type-pill[data-t="ORRI"]                       { background: #f6efe1; color: #8a6411; }
+.type-pill[data-t="Working Interest (NRI)"]     { background: #f0eef7; color: #574a8c; }
+
+/* --------------------------------------------------------- Run sheet ------- */
+.timeline { position: relative; margin-left: 8px; padding-left: 26px; }
+.timeline::before { content: ""; position: absolute; left: 7px; top: 4px; bottom: 4px; width: 2px; background: var(--border-strong); }
+.tl-item { position: relative; margin-bottom: 16px; }
+.tl-item::before { content: ""; position: absolute; left: -26px; top: 4px; width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; border: 3px solid var(--brand-accent); box-shadow: 0 0 0 3px #fff; }
+.tl-date { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+.tl-title { font-weight: 650; color: var(--ink); margin: 1px 0 3px; }
+.tl-meta { font-size: 13px; color: var(--ink-2); }
+.tl-effects { margin: 6px 0 0; padding: 0; list-style: none; }
+.tl-effects li { font-size: 12.5px; color: var(--ink-2); padding-left: 16px; position: relative; }
+.tl-effects li::before { content: "→"; position: absolute; left: 0; color: var(--brand-accent); }
+.tl-lang { margin-top: 6px; font-style: italic; font-size: 12.5px; color: var(--ink-3); border-left: 3px solid var(--border-strong); padding-left: 10px; }
+
+/* ----------------------------------------------------- Ownership tree ------ */
+.tree { font-family: var(--font-sans); }
+.tree-node { margin: 0; }
+.tree-children { list-style: none; margin: 0 0 0 14px; padding: 0 0 0 18px; border-left: 2px solid var(--border-strong); }
+.tree-row { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; }
+.tree-row .nm { font-weight: 600; color: var(--ink); }
+.tree-row .frac { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-2); background: var(--surface-3);
+  padding: 1px 8px; border-radius: 6px; }
+.tree-row .dec { font-family: var(--font-mono); font-size: 12.5px; color: var(--brand-primary); font-weight: 600; }
+.tree-row .role { font-size: 12px; color: var(--ink-3); }
+
+.flow { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.flow .pool { border: 1px dashed var(--border-strong); border-radius: var(--radius); padding: 14px 16px; background: var(--surface-2); }
+.flow .pool h4 { margin: 0 0 6px; font-size: 13px; color: var(--ink-2); }
+.bar { height: 14px; border-radius: 7px; overflow: hidden; display: flex; margin: 10px 0; border: 1px solid var(--border); }
+.bar span { display: block; height: 100%; }
+
+/* ------------------------------------------------------- Curative ---------- */
+.flag { display: grid; grid-template-columns: 6px 1fr; gap: 14px; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--surface); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow-sm); }
+.flag__rail { width: 6px; }
+.flag--critical .flag__rail { background: var(--critical); }
+.flag--high     .flag__rail { background: var(--high); }
+.flag--medium   .flag__rail { background: var(--medium); }
+.flag--info     .flag__rail { background: var(--info); }
+.flag__body { padding: 14px 16px 14px 0; }
+.flag__head { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.flag__title { font-weight: 650; color: var(--ink); font-size: 14.5px; }
+.flag__code { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); margin-left: auto; }
+.flag__detail { font-size: 13.5px; color: var(--ink-2); }
+.flag__detail strong { color: var(--ink); }
+
+/* ------------------------------------------------------------ Bits --------- */
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.toggle button { border: none; background: transparent; padding: 7px 16px; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.toggle button.is-active { background: var(--brand-primary); color: #fff; }
+.btn { border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink); padding: 8px 16px;
+  border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-sm); }
+.btn:hover { background: var(--surface-2); }
+.btn--primary { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); }
+.btn--primary:hover { background: var(--brand-primary-700); }
+.note { font-size: 12.5px; color: var(--ink-3); }
+.kpi-row { display: flex; gap: 8px; align-items: center; }
+.disclaimer { margin-top: 26px; padding: 14px 16px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius); font-size: 12.5px; color: var(--ink-3); }
