@@ -1,0 +1,95 @@
+// SMEPro DOI — Prisma models for Reporter V2.5.
+//
+// Paste these models into your existing prisma/schema.prisma (do NOT add a second
+// `datasource`/`generator` — reuse the ones already in the file), then:
+//
+//   npx prisma migrate dev --name doi_title_engine
+//   npx prisma generate
+//
+// Tables are mapped to the same snake_case names as integration/schema.sql, so a
+// raw-SQL migration and this Prisma model describe the identical schema. Every
+// table is operator-scoped to preserve Reporter's multi-tenant isolation.
+//
+// The TitleProject JSON (`project`) is the source of truth; the deck is a computed
+// snapshot, always re-derivable by re-running analyzeTitleProject(project).
+
+model TitleProject {
+  id         String   @id @default(uuid()) @db.Uuid
+  operatorId String   @map("operator_id")            // tenant key (your auth/session context)
+  name       String
+  tract      Json                                     // { name, grossAcres, legal, county, state }
+  unitId     String?  @map("unit_id")                 // optional link to a Reporter unit/well
+  project    Json                                     // full TitleProject (engine input)
+  balances   Boolean?                                 // last computed deck == 1.00000000
+  createdBy  String?  @map("created_by")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sourceFiles TitleSourceFile[]
+  decks       DoiDeck[]
+  curative    DoiCurative[]
+
+  @@index([operatorId])
+  @@index([operatorId, unitId])
+  @@map("title_projects")
+}
+
+// Uploaded source documents. Bytes live in your private GCS bucket; keep only the
+// object path + extraction provenance here (serve via short-lived signed URLs).
+model TitleSourceFile {
+  id         String   @id @default(uuid()) @db.Uuid
+  operatorId String   @map("operator_id")
+  projectId  String?  @map("project_id") @db.Uuid
+  filename   String
+  gcsObject  String   @map("gcs_object")
+  mediaType  String?  @map("media_type")
+  extraction Json?                                     // ExtractionResult (fields + snippets + confidence)
+  engine     String?                                   // 'gemini' | 'claude' | 'heuristic'
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  project TitleProject? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("title_source_files")
+}
+
+// A computed Division of Interest deck (a snapshot). Re-derivable from project.
+model DoiDeck {
+  id         String    @id @default(uuid()) @db.Uuid
+  operatorId String    @map("operator_id")
+  projectId  String    @map("project_id") @db.Uuid
+  basis      String    @default("tract")              // 'tract' | 'unit'
+  unitFactor Decimal?  @map("unit_factor") @db.Decimal(18, 12)
+  rows       Json                                       // [{ owner, type, fractionLabel, nri, unitNri, source }]
+  totalNri   Decimal   @map("total_nri") @db.Decimal(18, 12) // tract basis: 1.000000000000
+  balances   Boolean
+  approvedBy String?   @map("approved_by")              // set on landman sign-off
+  approvedAt DateTime? @map("approved_at") @db.Timestamptz(6)
+  ledgerHash String?   @map("ledger_hash")              // SHA-256 → your append-only audit ledger
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  project TitleProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("doi_decks")
+}
+
+// Curative items / title defects flagged by the engine for human resolution.
+model DoiCurative {
+  id         String    @id @default(uuid()) @db.Uuid
+  operatorId String    @map("operator_id")
+  projectId  String    @map("project_id") @db.Uuid
+  code       String                                     // NPRI_INTERPRETATION, WI_NRI_MISMATCH, …
+  severity   String                                     // critical | high | medium | info
+  title      String
+  detail     String
+  status     String    @default("open")                // open | resolved | waived
+  resolvedBy String?   @map("resolved_by")
+  resolvedAt DateTime? @map("resolved_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  project TitleProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@map("doi_curative")
+}
