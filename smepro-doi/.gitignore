@@ -1,0 +1,7 @@
+node_modules/
+
+# Root .gitignore excludes all dist/, but we DO want to ship the prebuilt,
+# double-click-to-open single-file app. Re-include just that one artifact.
+!dist/
+dist/*
+!dist/smepro-doi.html

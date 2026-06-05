@@ -1,0 +1,2368 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SMEPro · DOI Builder</title>
+  <meta name="description" content="SMEPro DOI Builder — title-to-decimal Division of Interest engine for upstream oil & gas." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+/* ============================================================================
+   SMEPro · DOI Builder — Design System
+   Re-skinned to the OFFICIAL SMEPro Technologies brand (smeprotech.com):
+   #003070 navy palette, Fluent depth shadows, Segoe UI / Inter + Cascadia Code,
+   and the 4-quadrant brand mark.
+
+   Light-only: every CONTENT/data surface is white or pale slate (#F5F7FA). The
+   only deep-navy bands are the thin top utility strip and the footer — these are
+   official SMEPro site chrome, not working surfaces. (Flip --utility-bg /
+   --footer-accent to a light token if a fully light chrome is preferred.)
+   ========================================================================== */
+
+:root {
+  /* --- Official SMEPro Brand Palette --- */
+  --smepro-navy:        #003070;
+  --smepro-navy-dark:   #002040;
+  --smepro-navy-mid:    #103060;
+  --smepro-navy-light:  #004080;
+  --smepro-accent:      #6070B0;
+  --smepro-sky:         #C0E0F0;
+  --smepro-slate:       #A0B0D0;
+  --smepro-surface:     #F5F7FA;
+  --smepro-white:       #FFFFFF;
+  --smepro-gray-10:     #FAF9F8;
+  --smepro-gray-30:     #EDEBE9;
+  --smepro-gray-60:     #C8C6C4;
+  --smepro-gray-90:     #8A8886;
+  --smepro-gray-160:    #201F1E;
+  --smepro-success:     #107C10;
+  --smepro-success-2:   #34A853;
+  --smepro-warning:     #C19C00;
+  --smepro-error:       #A4262C;
+
+  /* --- Fluent Depth Shadows --- */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 4px rgba(0,0,0,0.06), 0 8px 16px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 12px rgba(0,48,112,0.15), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-xl: 0 12px 28px rgba(0,0,0,0.08), 0 6px 12px rgba(0,0,0,0.04);
+  --shadow-blue: 0 8px 24px -8px rgba(0, 48, 112, 0.35);
+  --shadow-green: 0 8px 24px -8px rgba(16, 124, 16, 0.35);
+
+  /* --- Typography --- */
+  --font-sans: 'Segoe UI', 'Segoe UI Variable', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Cascadia Code', 'Cascadia Mono', 'Consolas', monospace;
+
+  /* --- Geometry --- */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+
+  /* --- Semantic mapping (app uses these) --- */
+  --bg:            var(--smepro-surface);
+  --surface:       var(--smepro-white);
+  --surface-2:     var(--smepro-gray-10);
+  --surface-3:     var(--smepro-surface);
+  --border:        var(--smepro-gray-30);
+  --border-strong: var(--smepro-gray-60);
+  --ink:           var(--smepro-gray-160);
+  --ink-2:         #323130;
+  --ink-3:         var(--smepro-gray-90);
+  --brand-primary: var(--smepro-navy);
+  --brand-accent:  var(--smepro-success);
+
+  --utility-bg:    var(--smepro-navy-dark);
+  --footer-accent: var(--smepro-navy);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum" 1;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ----------------------------------------------------- Utility strip ------- */
+.utility {
+  background: var(--utility-bg);
+  color: var(--smepro-gray-30);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 7px 0;
+}
+.utility-inner { max-width: 1480px; margin: 0 auto; padding: 0 28px; display: flex; justify-content: space-between; align-items: center; }
+.utility-badges { display: flex; gap: 16px; flex-wrap: wrap; }
+.utility-badge { display: flex; align-items: center; gap: 6px; color: var(--smepro-slate); }
+.utility-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #2cc154; box-shadow: 0 0 6px #2cc154; }
+.utility-links a { color: var(--smepro-slate); margin-left: 16px; }
+.utility-links a:hover { color: #fff; }
+
+/* --------------------------------------------------------- App header ------ */
+.app-header {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 18px;
+  padding: 12px 28px;
+  background: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 12px; cursor: default; }
+.brand__logo { width: 38px; height: 38px; display: block; overflow: visible; }
+.brand__title { display: flex; flex-direction: column; line-height: 1.12; }
+.brand__title b { font-size: 16px; font-weight: 700; letter-spacing: .2px; color: var(--smepro-navy); }
+.brand__title span { font-size: 9px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--smepro-slate); }
+.brand__divider { width: 1px; height: 30px; background: var(--border); }
+.brand__product { display: flex; flex-direction: column; line-height: 1.12; }
+.brand__product b { font-size: 14px; font-weight: 600; color: var(--ink); }
+.brand__product span { font-size: 11px; color: var(--ink-3); }
+.app-header__spacer { flex: 1; }
+.app-header__meta { font-size: 12px; color: var(--ink-3); text-align: right; font-family: var(--font-mono); }
+.app-header__meta b { color: var(--smepro-navy); }
+
+/* Brand-mark hover choreography (official) */
+.brand__logo .quad { transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
+.brand__logo .q-tl { transform-origin: 8px 8px; }
+.brand__logo .q-tr { transform-origin: 28px 8px; }
+.brand__logo .q-bl { transform-origin: 8px 28px; }
+.brand__logo .q-br { transform-origin: 28px 28px; }
+.brand:hover .q-tl { transform: translate(-2px,-2px) scale(1.05) rotate(-4deg); }
+.brand:hover .q-tr { transform: translate(2px,-2px) scale(1.05) rotate(4deg); }
+.brand:hover .q-bl { transform: translate(-2px,2px) scale(1.05) rotate(4deg); }
+.brand:hover .q-br { transform: translate(2px,2px) scale(1.05) rotate(-4deg); }
+
+/* ------------------------------------------------------------- Layout ------ */
+.layout { display: grid; grid-template-columns: 256px 1fr; align-items: start; }
+
+.nav {
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  padding: 20px 12px;
+  position: sticky; top: 63px; align-self: start; min-height: calc(100vh - 63px);
+}
+.nav__group { font-size: 11px; text-transform: uppercase; letter-spacing: .7px; color: var(--ink-3); margin: 6px 10px 10px; font-weight: 600; }
+.nav__item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 12px; margin: 2px 0; border-radius: var(--r-md);
+  font-size: 14px; color: var(--ink-2); cursor: pointer; user-select: none;
+  border: 1px solid transparent; transition: background .15s, color .15s;
+}
+.nav__item:hover { background: var(--surface-2); color: var(--ink); }
+.nav__item.is-active { background: rgba(0,48,112,.06); color: var(--smepro-navy); font-weight: 600; border-color: rgba(0,48,112,.12); }
+.nav__num { width: 22px; height: 22px; border-radius: var(--r-sm); background: var(--surface-3); color: var(--ink-2);
+  display: grid; place-items: center; font-size: 12px; font-weight: 700; font-family: var(--font-mono); }
+.nav__item.is-active .nav__num { background: var(--smepro-navy); color: #fff; }
+.nav__hr { height: 1px; background: var(--border); margin: 14px 8px; border: none; }
+.nav__legal { padding: 0 12px; font-size: 11px; color: var(--ink-3); line-height: 1.5; }
+
+/* --------------------------------------------------------------- Main ------ */
+.main { padding: 30px 40px 60px; max-width: 1200px; }
+.step { display: none; animation: fade .25s ease; }
+.step.is-active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.step__head { margin-bottom: 20px; }
+.step__eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--smepro-navy-light); font-weight: 700; }
+.step__title { font-size: 28px; font-weight: 750; margin: 6px 0 6px; color: var(--smepro-navy); letter-spacing: -.3px; }
+.step__sub { color: var(--ink-2); font-size: 14.5px; max-width: 780px; }
+
+/* ------------------------------------------------------------ Cards -------- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm); padding: 20px 22px; margin-bottom: 18px; }
+.card__title { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--ink-3); margin: 0 0 14px; font-weight: 700; }
+
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: 15px 17px; box-shadow: var(--shadow-sm); transition: transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s; }
+.stat:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.stat__label { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink-3); font-weight: 600; }
+.stat__value { font-size: 22px; font-weight: 700; color: var(--smepro-navy); margin-top: 5px; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+.stat__hint { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
+
+/* ------------------------------------------------------------ Badges ------- */
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; border: 1px solid transparent; }
+.badge--ok       { background: rgba(16,124,16,.08);  color: var(--smepro-success); border-color: rgba(16,124,16,.20); }
+.badge--critical { background: rgba(164,38,44,.08);  color: var(--smepro-error);   border-color: rgba(164,38,44,.20); }
+.badge--high     { background: rgba(193,108,0,.10);  color: #B4530E;                border-color: rgba(193,108,0,.22); }
+.badge--medium   { background: rgba(193,156,0,.12);  color: #8A6D00;                border-color: rgba(193,156,0,.28); }
+.badge--info     { background: rgba(0,64,128,.07);   color: var(--smepro-navy-light); border-color: rgba(0,64,128,.18); }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* ------------------------------------------------------------ Tables ------- */
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r-md); }
+table.data { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--surface); }
+table.data thead th {
+  text-align: left; padding: 11px 14px; background: var(--surface-3); color: var(--ink-2);
+  font-size: 11px; text-transform: uppercase; letter-spacing: .5px; font-weight: 700;
+  border-bottom: 1px solid var(--border-strong); position: sticky; top: 0; white-space: nowrap;
+}
+table.data tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--ink); vertical-align: top; }
+table.data tbody tr:last-child td { border-bottom: none; }
+table.data tbody tr:hover { background: var(--surface-2); }
+table.data .num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); text-align: right; white-space: nowrap; }
+table.data tfoot td { padding: 12px 14px; font-weight: 700; background: rgba(0,48,112,.04); border-top: 2px solid var(--border-strong); color: var(--smepro-navy); }
+.muted { color: var(--ink-3); }
+.src { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+
+.type-pill { font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: var(--r-sm); white-space: nowrap; }
+.type-pill[data-t="Royalty (NPRI)"]            { background: rgba(52,168,83,.12);  color: #1B7A36; }
+.type-pill[data-t="Mineral (Lessor Royalty)"]  { background: rgba(0,64,128,.10);   color: var(--smepro-navy); }
+.type-pill[data-t="ORRI"]                       { background: rgba(96,112,176,.16); color: #3B5270; }
+.type-pill[data-t="Working Interest (NRI)"]     { background: rgba(16,48,96,.10);   color: var(--smepro-navy-mid); }
+
+/* Review & Confirm rows */
+table.data tr.rv-needs td { background: rgba(193,108,0,.07); }
+table.data tr.rv-needs td:first-child { box-shadow: inset 3px 0 0 #B4530E; }
+.rv-inc { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-weight: 600; }
+.rv-input { width: 100%; font-family: var(--font-mono); font-size: 12.5px; padding: 5px 8px;
+  border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); }
+.rv-input:focus { outline: none; border-color: var(--smepro-navy-light); box-shadow: 0 0 0 2px rgba(0,64,128,.12); }
+
+/* --------------------------------------------------------- Run sheet ------- */
+.timeline { position: relative; margin-left: 8px; padding-left: 26px; }
+.timeline::before { content: ""; position: absolute; left: 7px; top: 4px; bottom: 4px; width: 2px; background: var(--border-strong); }
+.tl-item { position: relative; margin-bottom: 18px; }
+.tl-item::before { content: ""; position: absolute; left: -26px; top: 4px; width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; border: 3px solid var(--smepro-success-2); box-shadow: 0 0 0 3px #fff; }
+.tl-date { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+.tl-title { font-weight: 650; color: var(--smepro-navy); margin: 1px 0 3px; }
+.tl-meta { font-size: 13px; color: var(--ink-2); }
+.tl-effects { margin: 6px 0 0; padding: 0; list-style: none; }
+.tl-effects li { font-size: 12.5px; color: var(--ink-2); padding-left: 16px; position: relative; }
+.tl-effects li::before { content: "→"; position: absolute; left: 0; color: var(--smepro-success); }
+.tl-lang { margin-top: 6px; font-style: italic; font-size: 12.5px; color: var(--ink-3); border-left: 3px solid var(--smepro-sky); padding-left: 10px; }
+
+/* ----------------------------------------------------- Ownership tree ------ */
+.flow { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.flow .pool { border: 1px dashed var(--border-strong); border-radius: var(--r-md); padding: 14px 16px; background: var(--surface-2); }
+.flow .pool h4 { margin: 0 0 8px; font-size: 13px; color: var(--ink-2); }
+.bar { height: 16px; border-radius: 8px; overflow: hidden; display: flex; margin: 10px 0; border: 1px solid var(--border); box-shadow: var(--shadow-sm) inset; }
+.bar span { display: block; height: 100%; }
+.tree-row { display: flex; align-items: baseline; gap: 10px; padding: 6px 0; flex-wrap: wrap; }
+.tree-row .nm { font-weight: 600; color: var(--ink); }
+.tree-row .frac { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-2); background: var(--surface-3); padding: 1px 8px; border-radius: var(--r-sm); }
+.tree-row .role { font-size: 12px; color: var(--ink-3); }
+
+/* ------------------------------------------------------- Curative ---------- */
+.flag { display: grid; grid-template-columns: 6px 1fr; border: 1px solid var(--border);
+  border-radius: var(--r-md); background: var(--surface); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow-sm); }
+.flag--critical .flag__rail { background: var(--smepro-error); }
+.flag--high     .flag__rail { background: #B4530E; }
+.flag--medium   .flag__rail { background: var(--smepro-warning); }
+.flag--info     .flag__rail { background: var(--smepro-navy-light); }
+.flag__body { padding: 14px 16px; }
+.flag__head { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.flag__title { font-weight: 650; color: var(--ink); font-size: 14.5px; }
+.flag__code { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); margin-left: auto; }
+.flag__detail { font-size: 13.5px; color: var(--ink-2); }
+.flag__detail strong { color: var(--smepro-navy); }
+
+/* ------------------------------------------------------------ Bits --------- */
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.toggle button { border: none; background: transparent; padding: 7px 16px; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.toggle button.is-active { background: var(--smepro-navy); color: #fff; }
+.toggle button:disabled { color: var(--smepro-gray-60); cursor: not-allowed; }
+.btn { border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink); padding: 8px 16px;
+  border-radius: var(--r-sm); font-size: 13.5px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-sm); transition: all .2s; }
+.btn:hover { background: var(--surface-2); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn--primary { background: var(--smepro-navy); color: #fff; border-color: var(--smepro-navy); }
+.btn--primary:hover { background: var(--smepro-navy-mid); box-shadow: var(--shadow-blue); }
+.note { font-size: 12.5px; color: var(--ink-3); }
+.kpi-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.disclaimer { margin-top: 26px; padding: 14px 16px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-md); font-size: 12.5px; color: var(--ink-3); }
+
+/* ------------------------------------------------------------ Footer ------- */
+footer.app-footer { background: var(--smepro-gray-10); border-top: 1px solid var(--border); padding: 22px 0; }
+.foot-inner { max-width: 1480px; margin: 0 auto; padding: 0 28px; display: flex; justify-content: space-between;
+  align-items: center; font-size: 12px; color: var(--ink-3); gap: 16px; flex-wrap: wrap; }
+.foot-inner .accent { color: var(--footer-accent); font-weight: 600; }
+.foot-links a { margin-left: 16px; }
+.foot-links a:hover { color: var(--smepro-navy); }
+
+@media (max-width: 880px) {
+  .layout { grid-template-columns: 1fr; }
+  .nav { position: static; min-height: 0; border-right: none; border-bottom: 1px solid var(--border); }
+  .flow { grid-template-columns: 1fr; }
+  .main { padding: 22px; }
+}
+
+</style>
+</head>
+<body>
+
+  <!-- TOP UTILITY STRIP (official SMEPro chrome) -->
+  <div class="utility">
+    <div class="utility-inner">
+      <div class="utility-badges">
+        <span class="utility-badge">SOC 2 Type II</span>
+        <span class="utility-badge">ISO 27001</span>
+        <span class="utility-badge">Deterministic Math Engine</span>
+        <span class="utility-badge">Patent Pending · 63/986,802</span>
+      </div>
+      <div class="utility-links">
+        <a href="#">Trust Center</a>
+        <a href="#">IP Portfolio</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP HEADER -->
+  <header class="app-header">
+    <div class="brand">
+      <!-- Official SMEPro 4-quadrant mark: IOS+ · Yellow Brick Road · Universal Decoding Matrix · Compliance OS -->
+      <svg class="brand__logo" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SMEPro Technologies">
+        <defs>
+          <linearGradient id="g-navy" x1="0" y1="0" x2="16" y2="16" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0E2548"/><stop offset="100%" stop-color="#061224"/></linearGradient>
+          <linearGradient id="g-green" x1="20" y1="0" x2="36" y2="16" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34A853"/><stop offset="100%" stop-color="#1B7A36"/></linearGradient>
+          <linearGradient id="g-accent" x1="0" y1="20" x2="16" y2="36" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#557095"/><stop offset="100%" stop-color="#3B5270"/></linearGradient>
+          <linearGradient id="g-dnavy" x1="20" y1="20" x2="36" y2="36" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0A1E3D"/><stop offset="100%" stop-color="#051024"/></linearGradient>
+        </defs>
+        <g class="quad q-tl">
+          <rect x="0" y="0" width="16" height="16" rx="3" fill="url(#g-navy)"/>
+          <path d="M8 4V12M4 8H12" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+        </g>
+        <g class="quad q-tr">
+          <rect x="20" y="0" width="16" height="16" rx="3" fill="url(#g-green)"/>
+          <path d="M23 14.5 C 24 10.5, 27 8.5, 31 5.5" stroke="#fff" stroke-width="0.8" stroke-dasharray="1.5,1.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+          <path d="M28 8 L 31 5 L 33 2" stroke="#fff" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.95"/>
+          <circle cx="28" cy="8" r="0.8" fill="#fff"/><circle cx="31" cy="5" r="0.8" fill="#fff"/><circle cx="33" cy="2" r="1" fill="#fff"/>
+        </g>
+        <g class="quad q-bl">
+          <rect x="0" y="20" width="16" height="16" rx="3" fill="url(#g-accent)"/>
+          <path d="M3 23 H13 M3 27 H13 M3 31 H13" stroke="#fff" stroke-width="0.6" opacity="0.3"/>
+          <path d="M4 23 V31 M8 23 V31 M12 23 V31" stroke="#fff" stroke-width="0.6" opacity="0.3"/>
+          <circle cx="4" cy="23" r="0.9" fill="#fff" opacity="0.8"/><circle cx="8" cy="23" r="0.9" fill="#fff" opacity="0.8"/><circle cx="12" cy="23" r="0.9" fill="#fff" opacity="0.8"/>
+          <circle cx="4" cy="27" r="0.9" fill="#fff" opacity="0.8"/><circle cx="8" cy="27" r="1.1" fill="#fff"/><circle cx="12" cy="27" r="0.9" fill="#fff" opacity="0.8"/>
+          <circle cx="4" cy="31" r="0.9" fill="#fff" opacity="0.8"/><circle cx="8" cy="31" r="0.9" fill="#fff" opacity="0.8"/><circle cx="12" cy="31" r="0.9" fill="#fff" opacity="0.8"/>
+        </g>
+        <g class="quad q-br">
+          <rect x="20" y="20" width="16" height="16" rx="3" fill="url(#g-dnavy)"/>
+          <path d="M23 23.5 L28 21.5 L33 23.5 C33 27, 31 30.5, 28 32.5 C25 30.5, 23 27, 23 23.5 Z" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" fill="none" opacity="0.85"/>
+          <path d="M26 27 L27.5 28.5 L30.5 25.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85"/>
+        </g>
+      </svg>
+      <div class="brand__title"><b>SMEPro</b><span>Technologies</span></div>
+      <div class="brand__divider"></div>
+      <div class="brand__product"><b>DOI&nbsp;Builder</b><span>Title-to-Decimal Engine</span></div>
+    </div>
+    <div class="app-header__spacer"></div>
+    <div class="app-header__meta"><b>v0 MVP</b><br/>Analysis as of <b id="asof"></b></div>
+  </header>
+
+  <div class="layout">
+    <nav class="nav" id="nav-items"></nav>
+    <main class="main" id="main"></main>
+  </div>
+
+  <footer class="app-footer">
+    <div class="foot-inner">
+      <div>&copy; 2026 <span class="accent">SMEPro Technologies LLC</span> · All rights reserved · Patent Pending — U.S. Provisional Application No. 63/986,802</div>
+      <div class="foot-links"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Trademarks</a><a href="#">Security</a></div>
+    </div>
+  </footer>
+
+  <script type="module">
+/* ---- engine/fraction.mjs ---- */
+
+// @ts-check
+/**
+ * Exact rational arithmetic for division-of-interest math.
+ *
+ * Title decimals MUST sum to exactly 1.00000000. Binary floating point cannot
+ * represent 1/3, 1/7, 3/16, etc., so a deck built on JS numbers silently drifts
+ * (e.g. 0.99999999 or 1.00000001) and an analyst chasing the missing penny is a
+ * real, recurring division-order defect. We therefore carry every interest as a
+ * reduced BigInt fraction and only round to a decimal string at the display edge.
+ */
+
+/** @param {bigint} a @param {bigint} b @returns {bigint} */
+function gcd(a, b) {
+  a = a < 0n ? -a : a;
+  b = b < 0n ? -b : b;
+  while (b) {
+    [a, b] = [b, a % b];
+  }
+  return a;
+}
+
+class Fraction {
+  /** @type {bigint} */ n;
+  /** @type {bigint} */ d;
+
+  /**
+   * @param {bigint} numerator
+   * @param {bigint} [denominator]
+   */
+  constructor(numerator, denominator = 1n) {
+    if (denominator === 0n) throw new Error('Fraction: denominator cannot be zero');
+    // Normalize sign onto the numerator.
+    if (denominator < 0n) {
+      numerator = -numerator;
+      denominator = -denominator;
+    }
+    const g = gcd(numerator, denominator) || 1n;
+    this.n = numerator / g;
+    this.d = denominator / g;
+  }
+
+  /**
+   * Coerce a Fraction | bigint | integer-number | string into a Fraction.
+   * Strings accept "3", "1/4", "3/16", "0.25", "-0.0625".
+   * @param {Fraction|bigint|number|string} v
+   * @returns {Fraction}
+   */
+  static from(v) {
+    if (v instanceof Fraction) return v;
+    if (typeof v === 'bigint') return new Fraction(v, 1n);
+    if (typeof v === 'number') {
+      if (!Number.isInteger(v)) {
+        // Defer to the string parser so we go through exact decimal handling.
+        return Fraction.from(v.toString());
+      }
+      return new Fraction(BigInt(v), 1n);
+    }
+    if (typeof v === 'string') {
+      const s = v.trim();
+      if (s.includes('/')) {
+        const [a, b] = s.split('/');
+        return new Fraction(BigInt(a.trim()), BigInt(b.trim()));
+      }
+      if (s.includes('.')) {
+        const neg = s.startsWith('-');
+        const body = neg ? s.slice(1) : s;
+        const [intPart, fracPart = ''] = body.split('.');
+        const denom = 10n ** BigInt(fracPart.length);
+        const num = BigInt((intPart || '0') + fracPart);
+        return new Fraction(neg ? -num : num, denom);
+      }
+      return new Fraction(BigInt(s), 1n);
+    }
+    throw new Error(`Fraction.from: unsupported value ${String(v)}`);
+  }
+
+  static get ZERO() { return new Fraction(0n, 1n); }
+  static get ONE() { return new Fraction(1n, 1n); }
+
+  /** @param {Fraction|bigint|number|string} o */ add(o) { const f = Fraction.from(o); return new Fraction(this.n * f.d + f.n * this.d, this.d * f.d); }
+  /** @param {Fraction|bigint|number|string} o */ sub(o) { const f = Fraction.from(o); return new Fraction(this.n * f.d - f.n * this.d, this.d * f.d); }
+  /** @param {Fraction|bigint|number|string} o */ mul(o) { const f = Fraction.from(o); return new Fraction(this.n * f.n, this.d * f.d); }
+  /** @param {Fraction|bigint|number|string} o */ div(o) { const f = Fraction.from(o); if (f.n === 0n) throw new Error('Fraction: divide by zero'); return new Fraction(this.n * f.d, this.d * f.n); }
+  neg() { return new Fraction(-this.n, this.d); }
+
+  /** @param {Fraction|bigint|number|string} o @returns {-1|0|1} */
+  cmp(o) {
+    const f = Fraction.from(o);
+    const lhs = this.n * f.d;
+    const rhs = f.n * this.d;
+    return lhs < rhs ? -1 : lhs > rhs ? 1 : 0;
+  }
+  /** @param {Fraction|bigint|number|string} o */ eq(o) { return this.cmp(o) === 0; }
+  /** @param {Fraction|bigint|number|string} o */ lt(o) { return this.cmp(o) < 0; }
+  /** @param {Fraction|bigint|number|string} o */ lte(o) { return this.cmp(o) <= 0; }
+  /** @param {Fraction|bigint|number|string} o */ gt(o) { return this.cmp(o) > 0; }
+  /** @param {Fraction|bigint|number|string} o */ gte(o) { return this.cmp(o) >= 0; }
+  isZero() { return this.n === 0n; }
+  /** @returns {-1|0|1} */ sign() { return this.n < 0n ? -1 : this.n > 0n ? 1 : 0; }
+
+  /** Lossy — for charts/sorting only, never for the authoritative deck. */
+  toNumber() { return Number(this.n) / Number(this.d); }
+
+  /**
+   * Round-half-up to a fixed-decimal string (the disbursement representation).
+   * @param {number} [places]
+   * @returns {string}
+   */
+  toDecimal(places = 8) {
+    const sign = this.n < 0n ? '-' : '';
+    const num = this.n < 0n ? -this.n : this.n;
+    const scale = 10n ** BigInt(places);
+    const scaled = num * scale;
+    let q = scaled / this.d;
+    const r = scaled % this.d;
+    if (r * 2n >= this.d) q += 1n; // round half up
+    const digits = q.toString().padStart(places + 1, '0');
+    const cut = digits.length - places;
+    const intPart = digits.slice(0, cut);
+    const fracPart = digits.slice(cut);
+    return places > 0 ? `${sign}${intPart}.${fracPart}` : `${sign}${intPart}`;
+  }
+
+  /** Human fraction, e.g. "1/30" or "3". */
+  toFractionString() { return this.d === 1n ? this.n.toString() : `${this.n}/${this.d}`; }
+  toString() { return this.toFractionString(); }
+}
+
+/**
+ * Exact sum of a list of fractions.
+ * @param {Array<Fraction|bigint|number|string>} items
+ * @returns {Fraction}
+ */
+function sum(items) {
+  return items.reduce((/** @type {Fraction} */ acc, it) => acc.add(it), Fraction.ZERO);
+}
+
+const F = Fraction.from;
+
+
+/* ---- engine/schema.mjs ---- */
+
+// @ts-check
+/**
+ * Title Project schema — the typed domain model.
+ *
+ * This is the contract that document extraction writes to, the calc engine
+ * validates and folds, and the UI renders. Keeping one authoritative shape is
+ * what lets a non-expert front end stay honest: every decimal on screen is
+ * traceable back to one of these instruments.
+ *
+ * Interests are expressed with whatever notation a deed actually uses
+ * ("1/4", "0.25", "3/16") and parsed exactly by Fraction.from at fold time.
+ */
+
+/**
+ * @typedef {'individual'|'entity'} PartyType
+ * @typedef {{ id: string, name: string, type: PartyType }} Party
+ */
+
+/**
+ * @typedef {Object} Tract
+ * @property {string} name
+ * @property {number} grossAcres
+ * @property {string} legal      Full legal description.
+ * @property {string} [county]
+ * @property {string} [state]
+ */
+
+/**
+ * A royalty interest reserved out of the mineral estate (Non-Participating
+ * Royalty Interest). `basis` is the crux of most NPRI disputes:
+ *  - 'fixed'    => holder gets `quantum` of gross 8/8 production, regardless of
+ *                  the lease royalty (a "1/4 royalty").
+ *  - 'floating' => holder gets `quantum` OF the lease royalty (a "1/4 OF royalty").
+ * When the source language is ambiguous, set `ambiguous: true` and record the
+ * `interpretationNote`; the curative engine will surface both readings.
+ *
+ * @typedef {Object} NpriReservation
+ * @property {string} id
+ * @property {string|number} quantum            e.g. "1/4"
+ * @property {'fixed'|'floating'} basis
+ * @property {boolean} [ambiguous]
+ * @property {string} [interpretationNote]
+ * @property {string|number} [appliesToMineralFraction]  Default "1" (whole tract).
+ * @property {{ years: number, plusProduction: boolean }} [term]  Term reservation.
+ * @property {Array<{ party: string, share: string|number }>} owners  Shares of THIS npri, sum to 1.
+ */
+
+/**
+ * @typedef {Object} DocBase
+ * @property {string} id
+ * @property {string} date           ISO yyyy-mm-dd (execution or recording).
+ * @property {string} [recording]    Instrument / document number.
+ * @property {string} [title]        Human label for the run sheet.
+ */
+
+/**
+ * Mineral / Warranty / Royalty deed conveying a participating mineral interest.
+ * @typedef {DocBase & {
+ *   kind: 'mineralConveyance',
+ *   instrument: string,
+ *   grantor: string,
+ *   grantee: string,
+ *   conveyMineralFraction: string|number,   Absolute fraction of the tract minerals conveyed.
+ *   reservation?: NpriReservation,
+ *   exactLanguage?: string
+ * }} MineralConveyance
+ */
+
+/**
+ * @typedef {DocBase & {
+ *   kind: 'oilGasLease',
+ *   lessor: string,
+ *   lessee: string,
+ *   royalty: string|number,
+ *   primaryTermYears?: number,
+ *   pughDepthNote?: string,
+ *   noDeductionsNote?: string,
+ *   exactLanguage?: string
+ * }} OilGasLease
+ */
+
+/**
+ * Assignment of the leasehold / working interest. May reserve an ORRI and may
+ * recite ORRIs said to be already outstanding (which we cross-check).
+ * @typedef {DocBase & {
+ *   kind: 'assignment',
+ *   assignor: string,
+ *   assignee: string,
+ *   wiFraction?: string|number,                 Absolute fraction of WI assigned (default all).
+ *   statedNri?: string|number,                  NRI recited in the instrument (for cross-check).
+ *   reservedOrri?: { quantum: string|number, owner: string },
+ *   recitedOrri?: Array<{ quantum: string|number, owner: string, note?: string }>
+ * }} Assignment
+ */
+
+/**
+ * Stand-alone ORRI conveyance (carved from the leasehold/WI).
+ * @typedef {DocBase & {
+ *   kind: 'orriAssignment',
+ *   assignor: string,
+ *   assignee: string,
+ *   quantum: string|number,
+ *   note?: string
+ * }} OrriAssignment
+ */
+
+/**
+ * Affidavit of Heirship / probate distributing a decedent's interest.
+ * @typedef {DocBase & {
+ *   kind: 'affidavitOfHeirship',
+ *   decedent: string,
+ *   dateOfDeath?: string,
+ *   affects: 'npri'|'mineral',
+ *   npriId?: string,
+ *   communityProperty?: boolean,
+ *   survivingSpouse?: string,
+ *   distributions: Array<{ heir: string, share: string|number }>  Shares of decedent's interest, sum to 1.
+ * }} AffidavitOfHeirship
+ */
+
+/**
+ * @typedef {DocBase & {
+ *   kind: 'unitDesignation',
+ *   unitName: string,
+ *   unitAcres: number,
+ *   tractAcres: number,
+ *   otherTracts?: Array<{ name: string, acres: number }>
+ * }} UnitDesignation
+ */
+
+/**
+ * @typedef {DocBase & {
+ *   kind: 'completionReport',
+ *   well: string,
+ *   intervalTopFt?: number,
+ *   intervalBottomFt?: number
+ * }} CompletionReport
+ */
+
+/**
+ * @typedef {MineralConveyance|OilGasLease|Assignment|OrriAssignment|AffidavitOfHeirship|UnitDesignation|CompletionReport} TitleDocument
+ */
+
+/**
+ * @typedef {Object} TitleProject
+ * @property {string} name
+ * @property {Tract} tract
+ * @property {string} rootOwner            Party id that holds 100% of minerals at time zero.
+ * @property {Party[]} parties
+ * @property {TitleDocument[]} documents   Will be processed in chronological order.
+ * @property {string} [asOfDate]
+ */
+
+/** Document kinds, exported for UI menus / validation. */
+const DOC_KINDS = /** @type {const} */ ([
+  'mineralConveyance',
+  'oilGasLease',
+  'assignment',
+  'orriAssignment',
+  'affidavitOfHeirship',
+  'unitDesignation',
+  'completionReport',
+]);
+
+/**
+ * Lightweight structural validation. Returns a list of human-readable problems;
+ * empty array means the project is well-formed enough to fold.
+ * @param {TitleProject} project
+ * @returns {string[]}
+ */
+function validateProject(project) {
+  /** @type {string[]} */
+  const errors = [];
+  if (!project.tract) errors.push('Project is missing a tract.');
+  const ids = new Set((project.parties || []).map((p) => p.id));
+  if (!ids.has(project.rootOwner)) errors.push(`rootOwner "${project.rootOwner}" is not a declared party.`);
+
+  const ref = (/** @type {string|undefined} */ id, /** @type {string} */ where) => {
+    if (id && !ids.has(id)) errors.push(`Unknown party "${id}" referenced in ${where}.`);
+  };
+
+  for (const d of project.documents || []) {
+    if (!DOC_KINDS.includes(/** @type {any} */ (d.kind))) {
+      errors.push(`Document ${d.id}: unknown kind "${d.kind}".`);
+      continue;
+    }
+    switch (d.kind) {
+      case 'mineralConveyance':
+        ref(d.grantor, `${d.id}.grantor`);
+        ref(d.grantee, `${d.id}.grantee`);
+        (d.reservation?.owners || []).forEach((o) => ref(o.party, `${d.id}.reservation.owners`));
+        break;
+      case 'oilGasLease':
+        ref(d.lessor, `${d.id}.lessor`);
+        ref(d.lessee, `${d.id}.lessee`);
+        break;
+      case 'assignment':
+        ref(d.assignor, `${d.id}.assignor`);
+        ref(d.assignee, `${d.id}.assignee`);
+        if (d.reservedOrri) ref(d.reservedOrri.owner, `${d.id}.reservedOrri.owner`);
+        (d.recitedOrri || []).forEach((o) => ref(o.owner, `${d.id}.recitedOrri`));
+        break;
+      case 'orriAssignment':
+        ref(d.assignor, `${d.id}.assignor`);
+        ref(d.assignee, `${d.id}.assignee`);
+        break;
+      case 'affidavitOfHeirship':
+        ref(d.decedent, `${d.id}.decedent`);
+        if (d.survivingSpouse) ref(d.survivingSpouse, `${d.id}.survivingSpouse`);
+        d.distributions.forEach((dist) => ref(dist.heir, `${d.id}.distributions`));
+        break;
+      default:
+        break;
+    }
+  }
+  return errors;
+}
+
+
+/* ---- engine/engine.mjs ---- */
+
+// @ts-check
+/**
+ * Division-of-Interest engine.
+ *
+ * The engine is a deterministic fold over chronologically-ordered title
+ * instruments. It maintains two independent ledgers — the mineral/royalty estate
+ * and the leasehold/working-interest estate — because once a lease is granted the
+ * royalty side (who owns the minerals) and the cost-bearing side (who owns the
+ * WI) evolve separately. From the final state it derives the Division of Interest
+ * (DOI) deck using exact rational arithmetic, then runs a curative rule set to
+ * flag the judgment calls a human landman must confirm.
+ *
+ * The LLM/extraction layer is responsible for turning documents into the typed
+ * schema; ALL arithmetic lives here so decimals can never be hallucinated.
+ */
+
+
+/**
+ * @typedef {import('./schema.mjs').TitleProject} TitleProject
+ * @typedef {import('./schema.mjs').TitleDocument} TitleDocument
+ */
+
+const SEVERITY = /** @type {const} */ ({ CRITICAL: 'critical', HIGH: 'high', MEDIUM: 'medium', INFO: 'info' });
+
+/** @param {Map<string, Fraction>} m @param {string} k @param {Fraction} delta */
+function addTo(m, k, delta) {
+  const cur = m.get(k) || Fraction.ZERO;
+  const next = cur.add(delta);
+  if (next.isZero()) m.delete(k);
+  else m.set(k, next);
+}
+
+/**
+ * Build the chronological run sheet (Step 1) and the folded end state.
+ * @param {TitleProject} project
+ */
+function foldDocuments(project) {
+  const partyName = (/** @type {string} */ id) =>
+    project.parties.find((p) => p.id === id)?.name || id;
+
+  /** @type {Map<string, Fraction>} participating mineral ownership (sums to 1) */
+  const minerals = new Map([[project.rootOwner, Fraction.ONE]]);
+  /** @type {Array<any>} carved royalty interests */
+  const npris = [];
+  /** @type {any} */ let lease = null;
+  /** @type {Map<string, Fraction>} working-interest ownership (sums to 1) */
+  const wi = new Map();
+  /** @type {Array<any>} override royalties on the leasehold */
+  const orris = [];
+  /** @type {any} */ let unit = null;
+  /** @type {any} */ let production = null;
+  /** @type {Array<any>} */ const runSheet = [];
+  /** @type {Array<any>} */ const foldFlags = [];
+
+  const docs = [...project.documents].sort((a, b) => a.date.localeCompare(b.date));
+
+  for (const d of docs) {
+    /** @type {string[]} */ const effects = [];
+
+    switch (d.kind) {
+      case 'mineralConveyance': {
+        const frac = F(d.conveyMineralFraction);
+        const held = minerals.get(d.grantor) || Fraction.ZERO;
+        if (frac.gt(held)) {
+          foldFlags.push({
+            severity: SEVERITY.CRITICAL,
+            code: 'OVER_CONVEYANCE',
+            title: `Over-conveyance in ${d.id}`,
+            detail: `${partyName(d.grantor)} conveyed ${frac.toFractionString()} mineral interest but held only ${held.toFractionString()}.`,
+          });
+        }
+        addTo(minerals, d.grantor, frac.neg());
+        addTo(minerals, d.grantee, frac);
+        effects.push(`Minerals: ${frac.toFractionString()} from ${partyName(d.grantor)} → ${partyName(d.grantee)}.`);
+
+        if (d.reservation) {
+          const r = d.reservation;
+          const owners = (r.owners || []).map((o) => ({ party: o.party, share: F(o.share) }));
+          const ownerSum = sum(owners.map((o) => o.share));
+          if (!ownerSum.eq(1)) {
+            foldFlags.push({
+              severity: SEVERITY.HIGH,
+              code: 'NPRI_OWNER_SUM',
+              title: `NPRI owner shares do not sum to 1 (${d.id})`,
+              detail: `Owner shares total ${ownerSum.toFractionString()}.`,
+            });
+          }
+          npris.push({
+            id: r.id,
+            quantum: F(r.quantum),
+            basis: r.basis,
+            ambiguous: !!r.ambiguous,
+            interpretationNote: r.interpretationNote,
+            appliesTo: r.appliesToMineralFraction != null ? F(r.appliesToMineralFraction) : Fraction.ONE,
+            term: r.term,
+            heldByProduction: false,
+            owners,
+            sourceDoc: d.id,
+          });
+          effects.push(`Reserved ${F(r.quantum).toFractionString()} ${r.basis} NPRI (${r.id}).`);
+        }
+        break;
+      }
+
+      case 'oilGasLease': {
+        const leasedFraction = minerals.get(d.lessor) || Fraction.ZERO;
+        lease = {
+          id: d.id,
+          lessor: d.lessor,
+          lessee: d.lessee,
+          royalty: F(d.royalty),
+          coversMineralFraction: leasedFraction,
+          pughDepthNote: d.pughDepthNote,
+          noDeductionsNote: d.noDeductionsNote,
+          primaryTermYears: d.primaryTermYears,
+          date: d.date,
+        };
+        wi.clear();
+        wi.set(d.lessee, Fraction.ONE);
+        effects.push(`Lease granted at ${F(d.royalty).toFractionString()} royalty; 100% WI → ${partyName(d.lessee)}.`);
+        break;
+      }
+
+      case 'assignment': {
+        const frac = d.wiFraction != null ? F(d.wiFraction) : Fraction.ONE;
+        const held = wi.get(d.assignor) || Fraction.ZERO;
+        if (frac.gt(held)) {
+          foldFlags.push({
+            severity: SEVERITY.CRITICAL,
+            code: 'OVER_ASSIGNMENT',
+            title: `Over-assignment of WI in ${d.id}`,
+            detail: `${partyName(d.assignor)} assigned ${frac.toFractionString()} WI but held ${held.toFractionString()}.`,
+          });
+        }
+        addTo(wi, d.assignor, frac.neg());
+        addTo(wi, d.assignee, frac);
+        effects.push(`WI: ${frac.toFractionString()} from ${partyName(d.assignor)} → ${partyName(d.assignee)}.`);
+
+        if (d.reservedOrri) {
+          orris.push({ id: `${d.id}-orri`, quantum: F(d.reservedOrri.quantum), owner: d.reservedOrri.owner, sourceDoc: d.id, note: 'Reserved in assignment' });
+          effects.push(`ORRI ${F(d.reservedOrri.quantum).toFractionString()} reserved by ${partyName(d.reservedOrri.owner)}.`);
+        }
+        // Cross-check recited (allegedly pre-existing) ORRIs against what we've actually seen.
+        for (const rec of d.recitedOrri || []) {
+          const exists = orris.some((o) => o.owner === rec.owner && o.quantum.eq(F(rec.quantum)));
+          if (!exists) {
+            foldFlags.push({
+              severity: SEVERITY.HIGH,
+              code: 'ORRI_RECITAL_GAP',
+              title: `Recited ORRI not yet of record (${d.id})`,
+              detail: `${d.id} recites a ${F(rec.quantum).toFractionString()} ORRI to ${partyName(rec.owner)} as already outstanding${rec.note ? ` ("${rec.note}")` : ''}, but no such conveyance appears at or before ${d.date}.`,
+              recital: { quantum: rec.quantum, owner: rec.owner },
+            });
+          }
+        }
+        break;
+      }
+
+      case 'orriAssignment': {
+        orris.push({ id: d.id, quantum: F(d.quantum), owner: d.assignee, sourceDoc: d.id, note: d.note });
+        effects.push(`ORRI ${F(d.quantum).toFractionString()} conveyed ${partyName(d.assignor)} → ${partyName(d.assignee)}.`);
+        break;
+      }
+
+      case 'affidavitOfHeirship': {
+        const target = d.affects === 'npri'
+          ? npris.find((n) => n.id === d.npriId) || npris[0]
+          : null;
+        const dists = d.distributions.map((x) => ({ heir: x.heir, share: F(x.share) }));
+        const distSum = sum(dists.map((x) => x.share));
+        if (!distSum.eq(1)) {
+          foldFlags.push({
+            severity: SEVERITY.HIGH,
+            code: 'HEIRSHIP_SUM',
+            title: `Heirship distributions do not sum to 1 (${d.id})`,
+            detail: `Distributions total ${distSum.toFractionString()}.`,
+          });
+        }
+        if (target) {
+          /** @type {Map<string, Fraction>} */
+          const own = new Map(target.owners.map((/** @type {any} */ o) => [o.party, o.share]));
+          const decedentShare = own.get(d.decedent) || Fraction.ZERO;
+          own.delete(d.decedent);
+          for (const x of dists) addTo(own, x.heir, decedentShare.mul(x.share));
+          target.owners = [...own.entries()].map(([party, share]) => ({ party, share }));
+          effects.push(`Distributed ${partyName(d.decedent)}'s ${decedentShare.toFractionString()} NPRI share among ${dists.length} heir(s).`);
+        }
+        break;
+      }
+
+      case 'unitDesignation': {
+        unit = { name: d.unitName, unitAcres: d.unitAcres, tractAcres: d.tractAcres, otherTracts: d.otherTracts || [] };
+        effects.push(`Tract pooled into ${d.unitName} (${d.tractAcres}/${d.unitAcres} ac).`);
+        break;
+      }
+
+      case 'completionReport': {
+        production = { well: d.well, top: d.intervalTopFt, bottom: d.intervalBottomFt, date: d.date };
+        for (const n of npris) if (n.term) n.heldByProduction = true;
+        effects.push(`First production established (${d.well}); term interests held by production.`);
+        break;
+      }
+
+      default:
+        break;
+    }
+
+    runSheet.push({ ...d, effects });
+  }
+
+  return { minerals, npris, lease, wi, orris, unit, production, runSheet, foldFlags, partyName };
+}
+
+/**
+ * Derive the DOI deck (Step 4) from folded state, with an exact balance proof.
+ * @param {ReturnType<typeof foldDocuments>} state
+ */
+function buildDoi(state) {
+  const { lease, minerals, npris, wi, orris, unit, partyName } = state;
+  if (!lease) throw new Error('No oil & gas lease found — DOI requires an active lease.');
+
+  const royalty = lease.royalty; // lessor royalty, e.g. 1/5
+  /** @type {Array<any>} */ const rows = [];
+
+  // --- Royalty estate: NPRIs carve off the top, minerals share the remainder ---
+  let totalNpri = Fraction.ZERO;
+  for (const n of npris) {
+    const perProduction = (n.basis === 'floating' ? n.quantum.mul(royalty) : n.quantum).mul(n.appliesTo);
+    totalNpri = totalNpri.add(perProduction);
+    for (const o of n.owners) {
+      rows.push({
+        owner: partyName(o.party),
+        partyId: o.party,
+        type: 'Royalty (NPRI)',
+        fraction: o.share,
+        fractionLabel: `${o.share.toFractionString()} of ${n.quantum.toFractionString()} NPRI`,
+        nri: o.share.mul(perProduction),
+        source: n.sourceDoc,
+      });
+    }
+  }
+
+  const mineralRoyaltyPool = royalty.sub(totalNpri);
+  if (mineralRoyaltyPool.sign() < 0) {
+    // Fixed NPRI larger than the lease royalty — economically impossible to satisfy.
+    state.foldFlags.push({
+      severity: SEVERITY.CRITICAL,
+      code: 'NPRI_EXCEEDS_ROYALTY',
+      title: 'NPRI burden exceeds the lease royalty',
+      detail: `Carved royalty (${totalNpri.toFractionString()}) is larger than the lease royalty (${royalty.toFractionString()}), leaving the mineral owners a negative royalty. The NPRI is almost certainly a "fraction OF royalty" (floating), not a fixed fraction of 8/8.`,
+    });
+  }
+  for (const [party, mf] of minerals.entries()) {
+    rows.push({
+      owner: partyName(party),
+      partyId: party,
+      type: 'Mineral (Lessor Royalty)',
+      fraction: mf,
+      fractionLabel: `${mf.toFractionString()} minerals × ${mineralRoyaltyPool.toFractionString()} net royalty`,
+      nri: mf.mul(mineralRoyaltyPool),
+      source: lease.id,
+    });
+  }
+
+  // --- Leasehold estate: ORRIs carve off the WI, the WI owners net the rest ---
+  const wiGross = Fraction.ONE.sub(royalty); // 8/8 − royalty
+  let totalOrri = Fraction.ZERO;
+  for (const o of orris) {
+    totalOrri = totalOrri.add(o.quantum);
+    rows.push({
+      owner: partyName(o.owner),
+      partyId: o.owner,
+      type: 'ORRI',
+      fraction: o.quantum,
+      fractionLabel: `${o.quantum.toFractionString()} of 8/8`,
+      nri: o.quantum,
+      source: o.sourceDoc,
+    });
+  }
+  const wiNet = wiGross.sub(totalOrri);
+  for (const [party, wf] of wi.entries()) {
+    rows.push({
+      owner: partyName(party),
+      partyId: party,
+      type: 'Working Interest (NRI)',
+      fraction: wf,
+      fractionLabel: `${wf.toFractionString()} WI`,
+      nri: wf.mul(wiNet),
+      source: lease.id,
+    });
+  }
+
+  const total = sum(rows.map((r) => r.nri));
+  const balances = total.eq(1);
+
+  // Unit allocation factor (Step 4B).
+  const unitFactor = unit ? new Fraction(BigInt(Math.round(unit.tractAcres * 1e6)), BigInt(Math.round(unit.unitAcres * 1e6))) : Fraction.ONE;
+  for (const r of rows) r.unitNri = r.nri.mul(unitFactor);
+
+  return {
+    rows,
+    royalty,
+    totalNpri,
+    mineralRoyaltyPool,
+    wiGross,
+    totalOrri,
+    wiNet,
+    total,
+    balances,
+    unit,
+    unitFactor,
+  };
+}
+
+/**
+ * Curative / defect rules (Step 5) — the judgment calls that need a human.
+ * @param {ReturnType<typeof foldDocuments>} state
+ * @param {ReturnType<typeof buildDoi>} doi
+ */
+function runCurative(state, doi) {
+  /** @type {Array<any>} */ const flags = [...state.foldFlags];
+  const { lease, npris, minerals, partyName } = state;
+
+  // 1. NPRI fixed-vs-floating interpretation risk.
+  for (const n of npris) {
+    if (n.ambiguous) {
+      const floating = n.quantum.mul(lease.royalty).mul(n.appliesTo);
+      const fixed = n.quantum.mul(n.appliesTo);
+      flags.push({
+        severity: SEVERITY.CRITICAL,
+        code: 'NPRI_INTERPRETATION',
+        title: `NPRI "fraction vs. fraction-of-royalty" ambiguity (${n.id})`,
+        detail: `Reserved as "${n.quantum.toFractionString()}". Floating reading = ${floating.toDecimal()} (${floating.toFractionString()}); fixed reading = ${fixed.toDecimal()} (${fixed.toFractionString()}). Engine used the **${n.basis}** reading${n.interpretationNote ? ` — ${n.interpretationNote}` : ''}. Obtain a stipulation/correction before disbursing; impact is ${fixed.div(floating.isZero() ? Fraction.ONE : floating).toDecimal(2)}×.`,
+      });
+    }
+  }
+
+  // 2. WI NRI recited in an assignment vs. engine-computed net WI NRI.
+  for (const d of state.runSheet) {
+    if (d.kind === 'assignment' && d.statedNri != null) {
+      const stated = F(d.statedNri);
+      if (!stated.eq(doi.wiNet)) {
+        flags.push({
+          severity: SEVERITY.HIGH,
+          code: 'WI_NRI_MISMATCH',
+          title: `Assignment NRI recital differs from computed WI NRI (${d.id})`,
+          detail: `${d.id} recites ${stated.toDecimal()} NRI, but after the ${doi.totalOrri.toDecimal()} ORRI burden the net working-interest NRI computes to ${doi.wiNet.toDecimal()}. The recited figure is the lease NRI before ORRI; pay on ${doi.wiNet.toDecimal()}.`,
+        });
+      }
+    }
+  }
+
+  // 3. Reliance on an Affidavit of Heirship rather than probate.
+  for (const d of state.runSheet) {
+    if (d.kind === 'affidavitOfHeirship') {
+      flags.push({
+        severity: SEVERITY.MEDIUM,
+        code: 'HEIRSHIP_RELIANCE',
+        title: `Title relies on Affidavit of Heirship (${d.id})`,
+        detail: `Heirs of ${partyName(d.decedent)} take by affidavit, not adjudication. Confirm (a) no will, (b) the interest's ${d.communityProperty ? 'community' : 'separate'} characterization, and (c) that all listed heirs are the decedent's only heirs (esp. children of the surviving spouse) before treating title as marketable.`,
+      });
+    }
+  }
+
+  // 4. Term NPRI expiration / held-by-production monitoring.
+  for (const n of npris) {
+    if (n.term) {
+      flags.push({
+        severity: n.heldByProduction ? SEVERITY.MEDIUM : SEVERITY.HIGH,
+        code: 'TERM_NPRI',
+        title: `Term NPRI maintenance (${n.id})`,
+        detail: `Reserved for ${n.term.years} years${n.term.plusProduction ? ' and so long as production continues' : ''}. Currently ${n.heldByProduction ? 'held by production' : 'NOT shown as held by production'}. A cessation beyond the lease/continuous-development limits could terminate it and revert the royalty to the mineral owners.`,
+      });
+    }
+  }
+
+  // 5. Pugh / depth severance.
+  if (lease.pughDepthNote) {
+    flags.push({
+      severity: SEVERITY.MEDIUM,
+      code: 'PUGH_DEPTH',
+      title: 'Depth severance via Pugh clause',
+      detail: `${lease.pughDepthNote} Rights below the maintained interval are released/open and are NOT covered by this deck.`,
+    });
+  }
+
+  // 6. Unit allocation incomplete (other tracts' ownership unknown).
+  if (state.unit && (state.unit.otherTracts || []).length > 0) {
+    const acres = state.unit.otherTracts.map((/** @type {any} */ t) => `${t.name} (${t.acres} ac)`).join(', ');
+    flags.push({
+      severity: SEVERITY.MEDIUM,
+      code: 'UNIT_INCOMPLETE',
+      title: 'Unit deck incomplete — other tracts unmodeled',
+      detail: `This deck covers the subject tract only (participation ${doi.unitFactor.toDecimal()}). Ownership for ${acres} was not provided, so a full ${state.unit.name} well deck cannot be closed. Confirm the unit's allocation method (surface acreage assumed).`,
+    });
+  }
+
+  // 7. Shared executive rights after a mineral split.
+  if (minerals.size > 1) {
+    flags.push({
+      severity: SEVERITY.INFO,
+      code: 'SHARED_EXECUTIVE',
+      title: 'Executive rights are shared',
+      detail: `${minerals.size} parties now own participating minerals (${[...minerals.keys()].map(partyName).join(', ')}). Any future lease, amendment, or ratification needs all executive owners; the existing producing lease is unaffected.`,
+    });
+  }
+
+  // 8. Decimal-rounding disclosure.
+  flags.push({
+    severity: SEVERITY.INFO,
+    code: 'ROUNDING',
+    title: 'Decimal rounding disclosure',
+    detail: 'Internal math is exact (rational). Displayed 8-place decimals are round-half-up and may differ from the exact total by ±0.00000001 per owner; the authoritative sum is exactly 1.00000000.',
+  });
+
+  const order = { critical: 0, high: 1, medium: 2, info: 3 };
+  flags.sort((a, b) => order[a.severity] - order[b.severity]);
+  return flags;
+}
+
+/**
+ * Run the full 5-step analysis.
+ * @param {TitleProject} project
+ */
+function analyzeTitleProject(project) {
+  const errors = validateProject(project);
+  if (errors.length) throw new Error(`Invalid Title Project:\n - ${errors.join('\n - ')}`);
+
+  const state = foldDocuments(project);
+  const doi = buildDoi(state);
+  const curative = runCurative(state, doi);
+
+  return {
+    project: { name: project.name, tract: project.tract, asOfDate: project.asOfDate },
+    runSheet: state.runSheet,
+    ownership: {
+      minerals: [...state.minerals.entries()].map(([party, f]) => ({ party, name: state.partyName(party), fraction: f })),
+      npris: state.npris.map((/** @type {any} */ n) => ({
+        id: n.id,
+        quantum: n.quantum,
+        basis: n.basis,
+        owners: n.owners.map((/** @type {any} */ o) => ({ party: o.party, name: state.partyName(o.party), share: o.share })),
+      })),
+      wi: [...state.wi.entries()].map(([party, f]) => ({ party, name: state.partyName(party), fraction: f })),
+      orris: state.orris.map((/** @type {any} */ o) => ({ id: o.id, owner: o.owner, name: state.partyName(o.owner), quantum: o.quantum })),
+    },
+    lease: state.lease && {
+      id: state.lease.id,
+      lessee: state.partyName(state.lease.lessee),
+      royalty: state.lease.royalty,
+      pughDepthNote: state.lease.pughDepthNote,
+      noDeductionsNote: state.lease.noDeductionsNote,
+    },
+    unit: state.unit,
+    doi,
+    curative,
+  };
+}
+
+
+/* ---- engine/extraction.mjs ---- */
+
+// @ts-check
+/**
+ * Document extraction layer.
+ *
+ * Principle: the extractor reasons about LANGUAGE and produces a *draft* Title
+ * Project with field-level provenance (source snippet) and a confidence score.
+ * A human confirms/edits in the UI, and only then does the deterministic engine
+ * compute decimals. The extractor never does title math.
+ *
+ * Two implementations share the ExtractionResult contract:
+ *   - this file: a dependency-free HEURISTIC extractor (works offline, in-browser)
+ *   - extractors/claude.mjs: the production LLM adapter (schema-constrained tool use)
+ *
+ * Judgment calls the text cannot settle (NPRI fixed-vs-floating, heirship math,
+ * community characterization) are emitted at LOW confidence and flagged
+ * `needsDecision` so the review UI forces a human to resolve them.
+ */
+
+/**
+ * @typedef {Object} ExtractionField
+ * @property {string} path        Dot-path into the draft document (e.g. "royalty").
+ * @property {string} label       Human label.
+ * @property {any} value          Parsed value (string|number|object).
+ * @property {string} [raw]       Raw matched text.
+ * @property {string} [snippet]   Surrounding source text (provenance).
+ * @property {number} confidence  0..1.
+ * @property {boolean} [needsDecision]  True for SME judgment calls.
+ * @property {'pending'|'confirmed'|'edited'|'rejected'} status
+ */
+
+/**
+ * @typedef {Object} ExtractedDocument
+ * @property {string} id
+ * @property {string} kind
+ * @property {string} [instrument]
+ * @property {number} kindConfidence
+ * @property {string} title
+ * @property {string} sourceText
+ * @property {ExtractionField[]} fields
+ * @property {string[]} warnings
+ */
+
+/**
+ * @typedef {Object} ExtractionResult
+ * @property {ExtractedDocument[]} documents
+ * @property {Array<{id:string,name:string,type:'individual'|'entity'}>} parties
+ * @property {import('./schema.mjs').Tract} [tract]
+ * @property {string} [rootOwner]
+ * @property {string[]} notes
+ * @property {'heuristic'|'claude'} engine
+ */
+
+const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12,
+  jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12 };
+const pad = (n) => String(n).padStart(2, '0');
+
+/** @param {string} s @returns {string|null} ISO yyyy-mm-dd */
+function parseDate(s) {
+  if (!s) return null;
+  s = s.trim();
+  let m;
+  if ((m = s.match(/(\d{4})-(\d{2})-(\d{2})/))) return `${m[1]}-${m[2]}-${m[3]}`;
+  if ((m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/))) return `${m[3]}-${pad(m[1])}-${pad(m[2])}`;
+  if ((m = s.match(/([A-Za-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})/))) {
+    const mo = MONTHS[m[1].toLowerCase()];
+    if (mo) return `${m[3]}-${pad(mo)}-${pad(Number(m[2]))}`;
+  }
+  return null;
+}
+
+const ENTITY_RE = /\b(LLC|L\.L\.C|LP|L\.P|Inc|Ltd|Company|Co\.|Corp|Partners|Holdings|Operating|Exploration|Minerals|Royalty|Resources|Energy|Trust)\b/i;
+const slug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+const partyType = (name) => (ENTITY_RE.test(name) ? 'entity' : 'individual');
+const clean = (s) => (s || '').replace(/\s+/g, ' ').replace(/[.,;]\s*$/, '').trim();
+
+/**
+ * Primary grantor name: drop a co-grantor spouse ("… and wife, …") and any
+ * marital/individual descriptor, but PRESERVE entity suffixes (", LLC", ", LP").
+ */
+function primaryName(s) {
+  let first = String(s).split(/\s+and\s+(?:wife|husband|spouse)\b|\s+&\s+|\s*;\s*/i)[0];
+  first = first.replace(/,\s*(a\s+(?:single|married|widowed|unmarried)\b.*|et\s+ux\.?.*|individually.*)$/i, '');
+  return clean(first);
+}
+/** Spouse name if a co-grantor spouse is named. */
+function spouseName(s) {
+  const m = String(s).match(/and\s+(?:wife|husband|spouse),?\s+([A-Z][A-Za-z.\s'-]+?)\s*$/i);
+  return m ? clean(m[1]) : null;
+}
+
+const snippetAround = (text, idx, len) =>
+  clean(text.slice(Math.max(0, idx - 36), Math.min(text.length, idx + len + 64)));
+
+/**
+ * Kind detectors, in priority order (specific → general).
+ * @type {Array<{re: RegExp, kind: string, instrument?: string}>}
+ */
+const KIND_RULES = [
+  { re: /ASSIGNMENT OF OVERRIDING ROYALTY|OVERRIDING ROYALTY ASSIGNMENT|ORRI ASSIGNMENT/i, kind: 'orriAssignment' },
+  { re: /ASSIGNMENT(?: OF)?\s+(?:OIL\s*&?\s*(?:AND)?\s*GAS\s+LEASE|OGL|LEASE)/i, kind: 'assignment' },
+  { re: /OIL\s+(?:AND|&)\s+GAS\s+LEASE/i, kind: 'oilGasLease' },
+  { re: /WARRANTY DEED/i, kind: 'mineralConveyance', instrument: 'Warranty Deed' },
+  { re: /MINERAL DEED/i, kind: 'mineralConveyance', instrument: 'Mineral Deed' },
+  { re: /ROYALTY DEED/i, kind: 'mineralConveyance', instrument: 'Royalty Deed' },
+  { re: /AFFIDAVIT OF HEIRSHIP/i, kind: 'affidavitOfHeirship' },
+  { re: /DESIGNATION OF .*UNIT|UNIT DESIGNATION|HORIZONTAL UNIT/i, kind: 'unitDesignation' },
+  { re: /COMPLETION REPORT/i, kind: 'completionReport' },
+];
+
+const PRETTY = { mineralConveyance: 'Deed', oilGasLease: 'Oil & Gas Lease', assignment: 'Assignment of Lease',
+  orriAssignment: 'ORRI Assignment', affidavitOfHeirship: 'Affidavit of Heirship', unitDesignation: 'Unit Designation', completionReport: 'Completion Report' };
+
+/** Is this single line a document HEADING (uppercase-dominant, short)? */
+function isHeading(line) {
+  const t = line.trim();
+  if (!t || t.length > 70) return false;
+  const letters = t.replace(/[^A-Za-z]/g, '');
+  if (letters.length < 4) return false;
+  const upper = t.replace(/[^A-Z]/g, '').length;
+  return upper / letters.length > 0.6;
+}
+function detectKind(line) {
+  for (const r of KIND_RULES) if (r.re.test(line)) return r;
+  return null;
+}
+
+/** Split raw text into typed blocks. */
+function splitBlocks(text) {
+  const lines = text.split(/\r?\n/);
+  /** @type {Array<{kind:string,instrument?:string,header:string,text:string}>} */
+  const blocks = [];
+  let cur = null;
+  for (const line of lines) {
+    const k = isHeading(line) ? detectKind(line) : null;
+    if (k) {
+      cur = { kind: k.kind, instrument: k.instrument, header: line.trim(), text: '' };
+      blocks.push(cur);
+    } else if (cur) {
+      cur.text += line + '\n';
+    }
+  }
+  return blocks;
+}
+
+/**
+ * Build one extraction field by running a regex against block text.
+ * @returns {ExtractionField|null}
+ */
+function field(block, path, label, re, { conf = 0.85, group = 1, transform = (x) => clean(x), needsDecision = false } = {}) {
+  const m = block.text.match(re);
+  if (!m) return null;
+  const raw = m[group] != null ? m[group] : m[0];
+  return {
+    path, label, value: transform(raw), raw: clean(raw),
+    snippet: snippetAround(block.text, m.index ?? 0, m[0].length),
+    confidence: conf, needsDecision, status: 'pending',
+  };
+}
+
+/** Register a party and return its id. */
+function ensureParty(map, name) {
+  const nm = clean(name);
+  if (!nm) return null;
+  const id = slug(nm);
+  if (!map.has(id)) map.set(id, { id, name: nm, type: partyType(nm) });
+  return id;
+}
+
+/**
+ * Heuristic extraction from raw title text.
+ * @param {string} rawText
+ * @returns {ExtractionResult}
+ */
+function extractFromText(rawText) {
+  const parties = new Map();
+  /** @type {ExtractedDocument[]} */
+  const documents = [];
+  /** @type {string[]} */ const notes = [];
+  /** @type {import('./schema.mjs').Tract|undefined} */ let tract;
+  let rootOwner;
+
+  const blocks = splitBlocks(rawText);
+  if (!blocks.length) notes.push('No recognizable document headings were found. Paste each instrument with its type as a heading (e.g. "WARRANTY DEED").');
+
+  let seq = 0;
+  for (const b of blocks) {
+    seq++;
+    /** @type {ExtractionField[]} */ const fields = [];
+    /** @type {string[]} */ const warnings = [];
+    const push = (f) => { if (f) fields.push(f); };
+
+    const dateField = field(b, 'date', 'Date', /Date(?:d)?:?\s*([A-Za-z]+\.?\s+\d{1,2},?\s+\d{4}|\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2})/i,
+      { conf: 0.9, transform: (x) => parseDate(x) || clean(x) });
+    push(dateField);
+    const isoDate = dateField?.value && /^\d{4}-\d{2}-\d{2}$/.test(dateField.value) ? dateField.value : null;
+    const year = isoDate ? isoDate.slice(0, 4) : String(2000 + seq);
+    push(field(b, 'recording', 'Recording', /Doc(?:ument)?\.?\s*No\.?\s*([\w-]+)/i, { conf: 0.8 }));
+
+    const partyField = (path, label, re, { conf = 0.9, transform = clean } = {}) => {
+      const f = field(b, path, label, re, { conf, transform });
+      if (f) { ensureParty(parties, f.value); push(f); }
+      return f;
+    };
+
+    switch (b.kind) {
+      case 'mineralConveyance': {
+        const g = partyField('grantor', 'Grantor', /Grantor:?\s*(.+)/i, { transform: primaryName });
+        partyField('grantee', 'Grantee', /Grantee:?\s*(.+)/i);
+        // Mineral fraction conveyed
+        const fracF = field(b, 'conveyMineralFraction', 'Mineral interest conveyed',
+          /undivided\s+(\d+\s*%|\d+\/\d+)\s*(?:interest)?\s*(?:in(?: and under)?(?: the)?)?\s*minerals/i,
+          { conf: 0.8, transform: (x) => pctOrFrac(x) });
+        if (fracF) push(fracF);
+        else push({ path: 'conveyMineralFraction', label: 'Mineral interest conveyed', value: '1',
+          confidence: 0.5, status: 'pending', snippet: 'Defaulted to whole (100%) — confirm.', needsDecision: true });
+        // Legal / acreage
+        push(field(b, 'tract.legal', 'Legal description', /Legal Description:?\s*(.+)/i, { conf: 0.75 }));
+        push(field(b, 'tract.grossAcres', 'Gross acres', /([\d,]+(?:\.\d+)?)\s*acres/i, { conf: 0.7, transform: (x) => Number(x.replace(/,/g, '')) }));
+        // Reservation → NPRI
+        const resv = b.text.match(/reserv\w*[\s\S]*?undivided\s+(\d+\/\d+|\d?\.\d+)[\s\S]*?NPRI[\s\S]*?(?:production continues|\.|$)/i);
+        if (resv) {
+          const quantum = pctOrFrac(resv[1]);
+          const termM = resv[0].match(/term of (\d+)\s*years/i);
+          push({ path: 'reservation.quantum', label: 'Reserved NPRI', value: quantum, raw: clean(resv[1]),
+            snippet: snippetAround(b.text, resv.index ?? 0, resv[0].length), confidence: 0.85, status: 'pending' });
+          // Basis is the classic ambiguity — force a human decision.
+          push({ path: 'reservation.basis', label: 'NPRI basis (fixed vs. fraction-of-royalty)',
+            value: 'floating', confidence: 0.35, needsDecision: true, status: 'pending',
+            snippet: '“…NPRI in all oil, gas, and other minerals…” can read as fixed (of 8/8) or floating (of royalty). Defaulted to floating; confirm.' });
+          if (termM) push({ path: 'reservation.term.years', label: 'NPRI term (years)', value: Number(termM[1]),
+            raw: termM[0], snippet: snippetAround(b.text, (resv.index ?? 0) + (termM.index ?? 0), termM[0].length), confidence: 0.8, status: 'pending' });
+          // Community + co-owner split from "and wife/husband"
+          const sp = g ? spouseName(g.raw) : null;
+          if (sp) {
+            ensureParty(parties, sp);
+            push({ path: 'reservation.owners', label: 'NPRI reserved by', value: [primaryName(g.raw), sp],
+              confidence: 0.7, needsDecision: true, status: 'pending',
+              snippet: `Reserved by "${clean(g.raw)}" — split 1/2 each as community property by default; confirm characterization.` });
+          }
+        }
+        if (!tract) {
+          const legal = fields.find((f) => f.path === 'tract.legal')?.value;
+          const acres = fields.find((f) => f.path === 'tract.grossAcres')?.value;
+          tract = { name: clean(legal || b.header).slice(0, 80), grossAcres: Number(acres) || 0, legal: clean(legal || ''), state: /Texas|, TX/i.test(b.text) ? 'TX' : undefined, county: (b.text.match(/([A-Z][a-z]+)\s+County/) || [])[1] };
+        }
+        if (g && !rootOwner) rootOwner = slug(primaryName(g.raw));
+        break;
+      }
+      case 'oilGasLease': {
+        partyField('lessor', 'Lessor', /Lessor:?\s*(.+)/i);
+        partyField('lessee', 'Lessee', /Lessee:?\s*(.+)/i);
+        push(field(b, 'royalty', 'Lease royalty', /Royalty:?\s*(\d+\/\d+)/i, { conf: 0.9 }));
+        push(field(b, 'primaryTermYears', 'Primary term (years)', /Primary Term:?\s*(\d+)/i, { conf: 0.85, transform: (x) => Number(x) }));
+        push(field(b, 'pughDepthNote', 'Pugh / depth clause', /(Pugh[^.]*\.|Releases depths[^.]*\.)/i, { conf: 0.7 }));
+        push(field(b, 'noDeductionsNote', 'Cost-bearing clause', /(No-?Deductions[^.]*\.|post-production[^.]*\.)/i, { conf: 0.7 }));
+        break;
+      }
+      case 'assignment': {
+        partyField('assignor', 'Assignor', /Assignor:?\s*(.+)/i);
+        partyField('assignee', 'Assignee', /Assignee:?\s*(.+)/i);
+        push(field(b, 'wiFraction', 'Working interest assigned', /(\d+)\s*%\s*WI/i, { conf: 0.85, transform: (x) => (Number(x) / 100).toString() }));
+        push(field(b, 'statedNri', 'Recited NRI', /(\d+(?:\.\d+)?)\s*%\s*NRI/i, { conf: 0.6, transform: (x) => (Number(x) / 100).toString(), needsDecision: true }));
+        const ro = b.text.match(/(\d+(?:\.\d+)?)\s*%\s*ORRI\s+retained\s+by\s+(?:Assignor|([^.\n]+))/i);
+        if (ro) {
+          const ownerName = ro[2] ? clean(ro[2]) : (fields.find((f) => f.path === 'assignor')?.value);
+          ensureParty(parties, ownerName);
+          push({ path: 'reservedOrri', label: 'ORRI reserved in assignment', value: { quantum: (Number(ro[1]) / 100).toString(), owner: ownerName },
+            raw: clean(ro[0]), snippet: snippetAround(b.text, ro.index ?? 0, ro[0].length), confidence: 0.8, status: 'pending' });
+        }
+        const rc = b.text.match(/(\d+(?:\.\d+)?)\s*%\s*ORRI\s+(?:previously\s+)?conveyed\s+to\s+([^.\n]+)/i);
+        if (rc) {
+          ensureParty(parties, clean(rc[2]));
+          push({ path: 'recitedOrri', label: 'ORRI recited as pre-existing', value: [{ quantum: (Number(rc[1]) / 100).toString(), owner: clean(rc[2]), note: 'recited as previously conveyed' }],
+            raw: clean(rc[0]), snippet: snippetAround(b.text, rc.index ?? 0, rc[0].length), confidence: 0.7, status: 'pending' });
+        }
+        break;
+      }
+      case 'orriAssignment': {
+        partyField('assignor', 'Assignor', /Assignor:?\s*(.+)/i);
+        partyField('assignee', 'Assignee', /Assignee:?\s*(.+)/i);
+        const qm = b.text.match(/(?:Interest:?\s*)?(\d+(?:\.\d+)?)\s*%\s*ORRI|Interest:?\s*(\d+(?:\.\d+)?)\s*%/i);
+        if (qm) {
+          const pctStr = qm[1] ?? qm[2];
+          push({ path: 'quantum', label: 'ORRI conveyed', value: (Number(pctStr) / 100).toString(), raw: clean(qm[0]),
+            snippet: snippetAround(b.text, qm.index ?? 0, qm[0].length), confidence: 0.85, status: 'pending' });
+        }
+        break;
+      }
+      case 'affidavitOfHeirship': {
+        const dec = partyField('decedent', 'Decedent', /Decedent:?\s*(.+)/i);
+        if (dec) dec.value = primaryName(dec.raw);
+        push(field(b, 'dateOfDeath', 'Date of death', /Date of Death:?\s*(.+)/i, { conf: 0.85, transform: (x) => parseDate(x) || clean(x) }));
+        push({ path: 'communityProperty', label: 'Community property', value: /community/i.test(b.text), confidence: 0.6, needsDecision: true, status: 'pending',
+          snippet: /community/i.test(b.text) ? 'Affidavit references "community"; characterization affects the split — confirm.' : 'No community reference found — confirm.' });
+        // Heirs block
+        const heirLines = [...b.text.matchAll(/^\s*([A-Z][A-Za-z.\s]+?)\s*\(([^)]*)\)\s*[—\-]\s*([^\n]+)$/gm)];
+        if (heirLines.length) {
+          const heirs = heirLines.map((h) => ({ name: clean(h[1]), role: clean(h[2]), raw: clean(h[3]) }));
+          heirs.forEach((h) => ensureParty(parties, h.name));
+          const spouse = heirs.find((h) => /spouse/i.test(h.role));
+          if (spouse) push({ path: 'survivingSpouse', label: 'Surviving spouse', value: spouse.name, confidence: 0.85, status: 'pending', snippet: clean(spouse.raw) });
+          push({ path: 'distributions', label: `Heirship split (${heirs.length} heirs)`,
+            value: heirs.map((h) => ({ heir: h.name, share: `1/${heirs.length}` })),
+            confidence: 0.4, needsDecision: true, status: 'pending',
+            snippet: `Parsed heirs: ${heirs.map((h) => `${h.name} (${h.raw})`).join('; ')}. Defaulted to equal shares of the decedent's interest — confirm the intestacy/community math.` });
+        }
+        break;
+      }
+      case 'unitDesignation': {
+        push(field(b, 'unitName', 'Unit name', /Unit Name:?\s*(.+)|([A-Z][\w ]*?Unit)\b/i, { conf: 0.8 }));
+        push(field(b, 'unitAcres', 'Unit acres', /Acreage:?\s*([\d,]+(?:\.\d+)?)/i, { conf: 0.85, transform: (x) => Number(x.replace(/,/g, '')) }));
+        const t1 = b.text.match(/Tract\s*1[^\d]*?([\d.]+)\s*ac/i);
+        if (t1) push({ path: 'tractAcres', label: 'Subject tract acres', value: Number(t1[1]), raw: clean(t1[0]), snippet: snippetAround(b.text, t1.index ?? 0, t1[0].length), confidence: 0.8, status: 'pending' });
+        const others = [...b.text.matchAll(/Tract\s*([2-9]\d*)\s*[—\-]\s*(\d+(?:\.\d+)?)\s*ac/gi)].map((m) => ({ name: `Tract ${m[1]}`, acres: Number(m[2]) }));
+        if (others.length) push({ path: 'otherTracts', label: 'Other unit tracts', value: others, confidence: 0.75, status: 'pending', snippet: others.map((o) => `${o.name}: ${o.acres} ac`).join(', ') });
+        partyField('operator', 'Operator', /Operator:?\s*(.+)/i, 0.8);
+        break;
+      }
+      case 'completionReport': {
+        push(field(b, 'well', 'Well', /Well:?\s*(.+)|([A-Z][\w ]*#\s*\d+H?)/i, { conf: 0.8 }));
+        const iv = b.text.match(/([\d,]+)\s*[-–]\s*([\d,]+)\s*ft/i);
+        if (iv) {
+          push({ path: 'intervalTopFt', label: 'Interval top (ft)', value: Number(iv[1].replace(/,/g, '')), raw: clean(iv[0]), snippet: snippetAround(b.text, iv.index ?? 0, iv[0].length), confidence: 0.8, status: 'pending' });
+          push({ path: 'intervalBottomFt', label: 'Interval bottom (ft)', value: Number(iv[2].replace(/,/g, '')), raw: clean(iv[0]), snippet: snippetAround(b.text, iv.index ?? 0, iv[0].length), confidence: 0.8, status: 'pending' });
+        }
+        break;
+      }
+      default:
+        warnings.push(`Unhandled document kind: ${b.kind}`);
+    }
+
+    documents.push({
+      id: `${kindAbbrev(b.kind)}-${year}`,
+      kind: b.kind, instrument: b.instrument,
+      kindConfidence: 0.95,
+      title: `${b.instrument || PRETTY[b.kind] || b.kind} — ${year}`,
+      sourceText: b.text.trim(),
+      fields, warnings,
+    });
+  }
+
+  if (!rootOwner && parties.size) rootOwner = [...parties.keys()][0];
+
+  return { documents, parties: [...parties.values()], tract, rootOwner, notes, engine: 'heuristic' };
+}
+
+function kindAbbrev(kind) {
+  return { mineralConveyance: 'DEED', oilGasLease: 'OGL', assignment: 'ASG', orriAssignment: 'ORRI',
+    affidavitOfHeirship: 'AOH', unitDesignation: 'UNIT', completionReport: 'COMP' }[kind] || 'DOC';
+}
+
+/** "50%" → "1/2"; "1/4" → "1/4"; "0.25" → "0.25". */
+function pctOrFrac(s) {
+  s = String(s).trim();
+  if (s.includes('%')) return F(Number(s.replace('%', '')) / 100).toFractionString();
+  return s;
+}
+
+/**
+ * Assemble a (confirmed) ExtractionResult into a TitleProject the engine can run.
+ * Reads each field's current value; rejected fields are skipped.
+ * @param {ExtractionResult} result
+ * @returns {import('./schema.mjs').TitleProject}
+ */
+function buildProjectFromExtraction(result) {
+  const val = (doc, path) => {
+    const f = doc.fields.find((x) => x.path === path && x.status !== 'rejected');
+    return f ? f.value : undefined;
+  };
+
+  // Find the NPRI-bearing conveyance so the affidavit can target it.
+  const npriDoc = result.documents.find((d) => d.kind === 'mineralConveyance' && val(d, 'reservation.quantum'));
+  const npriId = npriDoc ? `NPRI-${npriDoc.id}` : undefined;
+
+  const documents = result.documents.map((d) => {
+    const base = { id: d.id, date: val(d, 'date'), recording: val(d, 'recording'), title: d.title };
+    switch (d.kind) {
+      case 'mineralConveyance': {
+        const reservation = val(d, 'reservation.quantum') ? {
+          id: `NPRI-${d.id}`,
+          quantum: val(d, 'reservation.quantum'),
+          basis: val(d, 'reservation.basis') || 'floating',
+          ambiguous: true,
+          term: val(d, 'reservation.term.years') ? { years: val(d, 'reservation.term.years'), plusProduction: true } : undefined,
+          owners: ownersFrom(val(d, 'reservation.owners'), result),
+        } : undefined;
+        return { ...base, kind: 'mineralConveyance', instrument: d.instrument || 'Deed',
+          grantor: slug(val(d, 'grantor') || ''), grantee: slug(val(d, 'grantee') || ''),
+          conveyMineralFraction: val(d, 'conveyMineralFraction') || '1', reservation };
+      }
+      case 'oilGasLease':
+        return { ...base, kind: 'oilGasLease', lessor: slug(val(d, 'lessor') || ''), lessee: slug(val(d, 'lessee') || ''),
+          royalty: val(d, 'royalty') || '1/8', primaryTermYears: val(d, 'primaryTermYears'),
+          pughDepthNote: val(d, 'pughDepthNote'), noDeductionsNote: val(d, 'noDeductionsNote') };
+      case 'assignment': {
+        const ro = val(d, 'reservedOrri'); const rc = val(d, 'recitedOrri');
+        return { ...base, kind: 'assignment', assignor: slug(val(d, 'assignor') || ''), assignee: slug(val(d, 'assignee') || ''),
+          wiFraction: val(d, 'wiFraction') || '1', statedNri: val(d, 'statedNri'),
+          reservedOrri: ro ? { quantum: ro.quantum, owner: slug(ro.owner) } : undefined,
+          recitedOrri: rc ? rc.map((x) => ({ quantum: x.quantum, owner: slug(x.owner), note: x.note })) : undefined };
+      }
+      case 'orriAssignment':
+        return { ...base, kind: 'orriAssignment', assignor: slug(val(d, 'assignor') || ''), assignee: slug(val(d, 'assignee') || ''), quantum: val(d, 'quantum') || '0' };
+      case 'affidavitOfHeirship':
+        return { ...base, kind: 'affidavitOfHeirship', decedent: slug(val(d, 'decedent') || ''),
+          dateOfDeath: val(d, 'dateOfDeath'), affects: 'npri', npriId,
+          communityProperty: !!val(d, 'communityProperty'), survivingSpouse: val(d, 'survivingSpouse') ? slug(val(d, 'survivingSpouse')) : undefined,
+          distributions: (val(d, 'distributions') || []).map((x) => ({ heir: slug(x.heir), share: x.share })) };
+      case 'unitDesignation':
+        return { ...base, kind: 'unitDesignation', unitName: val(d, 'unitName') || 'Unit',
+          unitAcres: val(d, 'unitAcres') || 0, tractAcres: val(d, 'tractAcres') || 0, otherTracts: val(d, 'otherTracts') || [] };
+      case 'completionReport':
+        return { ...base, kind: 'completionReport', well: val(d, 'well') || 'Well', intervalTopFt: val(d, 'intervalTopFt'), intervalBottomFt: val(d, 'intervalBottomFt') };
+      default:
+        return { ...base, kind: d.kind };
+    }
+  });
+
+  return {
+    name: result.tract?.name ? `Extracted — ${result.tract.name}` : 'Extracted Title Project',
+    asOfDate: new Date().toISOString().slice(0, 10),
+    tract: result.tract || { name: 'Tract', grossAcres: 0, legal: '' },
+    rootOwner: result.rootOwner || (result.parties[0] && result.parties[0].id) || 'owner',
+    parties: result.parties,
+    documents,
+  };
+}
+
+/** NPRI owners: split named reservors equally; else default a single owner placeholder. */
+function ownersFrom(ownerNames, result) {
+  if (Array.isArray(ownerNames) && ownerNames.length) {
+    const share = `1/${ownerNames.length}`;
+    return ownerNames.map((n) => ({ party: slug(n), share }));
+  }
+  const root = result.rootOwner || (result.parties[0] && result.parties[0].id);
+  return root ? [{ party: root, share: '1' }] : [];
+}
+
+
+/* ---- engine/cases/benton-morales.mjs ---- */
+
+// @ts-check
+/**
+ * Seed case: North 40 ac, J. Morales Survey A-112, Galveston County, TX.
+ * Encodes the eight source instruments supplied for the title audit. This is the
+ * golden fixture the test suite uses to prove the engine balances to 1.0 and
+ * reproduces the analyst-approved decimals.
+ */
+
+/** @type {import('../schema.mjs').TitleProject} */
+const bentonMorales = {
+  name: 'Benton / Morales — N. 40 ac, J. Morales Svy A-112',
+  asOfDate: '2026-06-04',
+  tract: {
+    name: 'Tract 1 — North 40 ac, J. Morales Survey A-112',
+    grossAcres: 40,
+    legal: 'North 40.000 acres of the J. Morales Survey, A-112, Galveston County, Texas (orig. Vol. 842, Pg. 119, G.C.O.R.)',
+    county: 'Galveston',
+    state: 'TX',
+  },
+  rootOwner: 'benton-h',
+  parties: [
+    { id: 'benton-h', name: 'Harold J. Benton', type: 'individual' },
+    { id: 'benton-m', name: 'Marlene S. Benton', type: 'individual' },
+    { id: 'benton-jacob', name: 'Jacob Benton', type: 'individual' },
+    { id: 'benton-emily', name: 'Emily Benton', type: 'individual' },
+    { id: 'cypress', name: 'Cypress Ridge Holdings, LLC', type: 'entity' },
+    { id: 'lonestar', name: 'Lone Star Royalty Partners, LP', type: 'entity' },
+    { id: 'falcon', name: 'Falcon Exploration, LLC', type: 'entity' },
+    { id: 'redriver', name: 'Red River Operating, LLC', type: 'entity' },
+    { id: 'horizon', name: 'Horizon Minerals, LLC', type: 'entity' },
+  ],
+  documents: [
+    {
+      id: 'WD-2011',
+      date: '2011-03-14',
+      recording: 'Doc. No. 2011031457, G.C.O.R.',
+      title: 'Warranty Deed — Benton → Cypress Ridge',
+      kind: 'mineralConveyance',
+      instrument: 'Warranty Deed',
+      grantor: 'benton-h',
+      grantee: 'cypress',
+      conveyMineralFraction: '1', // conveys the whole tract; minerals follow, NPRI reserved
+      exactLanguage:
+        'Grantors reserve an undivided 1/4 (0.25) NPRI in all oil, gas, and other minerals for a term of 20 years and as long thereafter as production continues.',
+      reservation: {
+        id: 'NPRI-BENTON',
+        quantum: '1/4',
+        // Source language ("1/4 NPRI in all minerals") reads as fixed, but the DO
+        // inputs say "25% of royalty". Fixed would exceed the 1/5 lease royalty and
+        // is economically impossible, so we operate on the floating reading and flag.
+        basis: 'floating',
+        ambiguous: true,
+        interpretationNote:
+          'Deed language ("1/4 NPRI in all minerals") could be read as fixed 1/4 of 8/8; DO inputs say "25% of royalty". Floating used because fixed (0.25) exceeds the 0.20 lease royalty.',
+        term: { years: 20, plusProduction: true },
+        // Reserved by Harold & wife Marlene as community property → 1/2 each.
+        owners: [
+          { party: 'benton-h', share: '1/2' },
+          { party: 'benton-m', share: '1/2' },
+        ],
+      },
+    },
+    {
+      id: 'OGL-2013',
+      date: '2013-06-01',
+      recording: 'Doc. No. 2013060154, G.C.O.R.',
+      title: 'Oil & Gas Lease — Cypress Ridge → Falcon',
+      kind: 'oilGasLease',
+      lessor: 'cypress',
+      lessee: 'falcon',
+      royalty: '1/5',
+      primaryTermYears: 3,
+      pughDepthNote:
+        'Horizontal Pugh clause releases depths below 100′ beneath the deepest producing perforation (lease maintained to ~8,300′ given the 8,200′ deepest perf).',
+      noDeductionsNote:
+        'Modified no-deductions clause: post-production costs allowed once production is in marketable condition.',
+    },
+    {
+      id: 'MD-2014',
+      date: '2014-07-02',
+      recording: 'Doc. No. 2014070291, G.C.O.R.',
+      title: 'Mineral Deed — Cypress Ridge → Lone Star',
+      kind: 'mineralConveyance',
+      instrument: 'Mineral Deed',
+      grantor: 'cypress',
+      grantee: 'lonestar',
+      conveyMineralFraction: '1/2', // undivided 50% of the tract minerals
+      exactLanguage: 'Conveys an undivided 50% interest in the minerals; subject to the Benton NPRI and the 2013 Falcon lease.',
+    },
+    {
+      id: 'ASG-2016',
+      date: '2016-01-05',
+      recording: 'Doc. No. 2016010512, G.C.O.R.',
+      title: 'Assignment of OGL — Falcon → Red River',
+      kind: 'assignment',
+      assignor: 'falcon',
+      assignee: 'redriver',
+      wiFraction: '1',
+      statedNri: '0.80', // recital — engine cross-checks against computed net WI NRI
+      reservedOrri: { quantum: '0.04', owner: 'falcon' },
+      recitedOrri: [
+        { quantum: '0.01', owner: 'horizon', note: 'previously conveyed to Horizon Minerals' },
+      ],
+    },
+    {
+      id: 'AOH-2018',
+      date: '2018-04-22',
+      recording: 'Doc. No. 2018042219, G.C.O.R.',
+      title: 'Affidavit of Heirship — Harold J. Benton',
+      kind: 'affidavitOfHeirship',
+      decedent: 'benton-h',
+      dateOfDeath: '2017-10-22',
+      affects: 'npri',
+      npriId: 'NPRI-BENTON',
+      communityProperty: true,
+      survivingSpouse: 'benton-m',
+      // Harold's 1/2 community share of the NPRI passes 1/3 spouse, 1/3 each child
+      // (TX separate-personal-property intestacy). Marlene keeps her own 1/2.
+      distributions: [
+        { heir: 'benton-m', share: '1/3' },
+        { heir: 'benton-jacob', share: '1/3' },
+        { heir: 'benton-emily', share: '1/3' },
+      ],
+    },
+    {
+      id: 'ORRI-2020',
+      date: '2020-09-14',
+      title: 'ORRI Assignment — Falcon → Horizon',
+      kind: 'orriAssignment',
+      assignor: 'falcon',
+      assignee: 'horizon',
+      quantum: '0.01',
+      note: 'Conveyance of the 1% ORRI recited as pre-existing in the 2016 assignment.',
+    },
+    {
+      id: 'UNIT-2021',
+      date: '2021-11-03',
+      recording: 'Doc. No. 2021110308, G.C.O.R.',
+      title: 'Designation of Horizontal Unit — Morales Unit',
+      kind: 'unitDesignation',
+      unitName: 'Morales Unit',
+      unitAcres: 320,
+      tractAcres: 40,
+      otherTracts: [
+        { name: 'Tract 2', acres: 120 },
+        { name: 'Tract 3', acres: 160 },
+      ],
+    },
+    {
+      id: 'COMP-2022',
+      date: '2022-02-18',
+      title: 'Completion Report — Morales Unit #1H',
+      kind: 'completionReport',
+      well: 'Morales Unit #1H',
+      intervalTopFt: 7800,
+      intervalBottomFt: 8200,
+    },
+  ],
+};
+
+
+/* ---- engine/cases/benton-morales-source.mjs ---- */
+
+// @ts-check
+/**
+ * Raw source text fixture — the eight Benton/Morales instruments as a title
+ * abstractor would paste them (OCR'd deeds, run-sheet notes). Used to exercise
+ * the heuristic extractor end-to-end in the test suite and to prefill the
+ * Intake screen for the demo.
+ */
+const bentonMoralesSource = `WARRANTY DEED
+Date: March 14, 2011
+Grantor: Harold J. Benton and wife, Marlene S. Benton
+Grantee: Cypress Ridge Holdings, LLC
+Legal Description: Tract 1: 40.000 acres, more or less, being the North 40 acres of the J. Morales Survey, A-112, Galveston County, Texas, described in a deed recorded in Vol. 842, Pg. 119, G.C.O.R.
+Reservations: Grantors reserve an undivided 1/4 (0.25) NPRI in all oil, gas, and other minerals for a term of 20 years and as long thereafter as production continues.
+Consideration: $210,000
+Recording: Doc. No. 2011031457, Galveston County Official Records
+
+OIL AND GAS LEASE
+Date: June 1, 2013
+Lessor: Cypress Ridge Holdings, LLC
+Lessee: Falcon Exploration, LLC
+Royalty: 1/5 (0.20)
+Primary Term: 3 years
+Horizontal Pugh Clause: Releases depths below 100' below deepest producing perforation.
+Continuous Development: 120-day gap.
+No-Deductions clause (modified: allows post-production costs after marketable condition).
+Recording: Doc. No. 2013060154, G.C.O.R.
+
+MINERAL DEED
+Date: July 2, 2014
+Grantor: Cypress Ridge Holdings, LLC
+Grantee: Lone Star Royalty Partners, LP
+Conveyance: Grantor conveys an undivided 50% interest in the minerals in and under 40.000 acres, J. Morales Survey, A-112, Galveston County, Texas.
+Subject to: Existing NPRI of 0.25 reserved by Benton family; existing oil & gas lease dated 06/01/2013 to Falcon Exploration, LLC.
+Recording: Doc. No. 2014070291, G.C.O.R.
+
+ASSIGNMENT OF OIL & GAS LEASE
+Date: January 5, 2016
+Assignor: Falcon Exploration, LLC
+Assignee: Red River Operating, LLC
+Interest Assigned: 100% WI / 80% NRI.
+Subject to 4% ORRI retained by Assignor.
+Subject to 1% ORRI previously conveyed to Horizon Minerals, LLC.
+Recording: Doc. No. 2016010512, G.C.O.R.
+
+AFFIDAVIT OF HEIRSHIP
+Date: April 22, 2018
+Decedent: Harold J. Benton
+Date of Death: October 22, 2017
+Heirs:
+Marlene S. Benton (surviving spouse) — 1/2 community + 1/3 separate
+Jacob Benton (son) — 1/3 separate
+Emily Benton (daughter) — 1/3 separate
+Property Affected: 0.25 NPRI reserved in 2011 Warranty Deed.
+Recording: Doc. No. 2018042219, G.C.O.R.
+
+ASSIGNMENT OF OVERRIDING ROYALTY
+Date: September 14, 2020
+Assignor: Falcon Exploration, LLC
+Assignee: Horizon Minerals, LLC
+Interest: 1% ORRI.
+
+DESIGNATION OF HORIZONTAL UNIT
+Date: November 3, 2021
+Operator: Red River Operating, LLC
+Unit Name: Morales Unit
+Acreage: 320.00 acres
+Tracts: Tract 1 — 40 acres (subject tract); Tract 2 — 120 acres; Tract 3 — 160 acres.
+Recording: Doc. No. 2021110308, G.C.O.R.
+
+COMPLETION REPORT
+Date: February 18, 2022
+Well: Morales Unit #1H
+Producing from 7,800-8,200 ft.`;
+
+
+/* ---- web/app.js ---- */
+
+// @ts-check
+/*
+ * SMEPro DOI Builder — UI layer.
+ *
+ * This file is engine-agnostic in spirit: it reads ONLY the result object returned
+ * by analyzeTitleProject() and renders the five steps. It performs no title math.
+ *
+ * In the single-file build, `analyzeTitleProject`, `bentonMorales`, and `Fraction`
+ * are concatenated into scope ahead of this file. In dev (module mode) they are
+ * attached to window.SMEPRO by index.html. We resolve from either location.
+ */
+const ENGINE = (typeof analyzeTitleProject !== 'undefined')
+  ? { analyzeTitleProject, project: bentonMorales, extractFromText, buildProjectFromExtraction, sourceText: bentonMoralesSource }
+  : window.SMEPRO;
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const $ = (sel, root = document) => root.querySelector(sel);
+
+let BASIS = 'tract'; // 'tract' | 'unit'
+let MODE = 'analysis';      // 'analysis' | 'intake' | 'review'
+let EXTRACTION = null;      // current ExtractionResult during import
+let RESULT = ENGINE.analyzeTitleProject(ENGINE.project);
+
+// v1.1 import state
+let BACKEND = { available: false, hasKey: false, model: null };
+let INTAKE_TEXT = null;     // current Intake textarea content (persists across repaints)
+let INTAKE_PDF = null;      // { name, base64, mediaType } when a PDF is loaded
+
+/* ----------------------------------------------------------- Run sheet ----- */
+function renderRunSheet(r) {
+  const items = r.runSheet.map((d) => {
+    const lang = d.exactLanguage ? `<div class="tl-lang">“${esc(d.exactLanguage)}”</div>` : '';
+    const effects = (d.effects || []).map((e) => `<li>${esc(e)}</li>`).join('');
+    const rec = d.recording ? ` · <span class="src">${esc(d.recording)}</span>` : '';
+    return `<div class="tl-item">
+      <div class="tl-date">${esc(d.date)}${rec}</div>
+      <div class="tl-title">${esc(d.title || d.id)}</div>
+      <div class="tl-meta">${esc(prettyKind(d.kind))}</div>
+      <ul class="tl-effects">${effects}</ul>
+      ${lang}
+    </div>`;
+  }).join('');
+  return `<div class="card"><div class="card__title">Chronological Run Sheet · ${r.runSheet.length} instruments</div>
+    <div class="timeline">${items}</div></div>`;
+}
+function prettyKind(k) {
+  return ({ mineralConveyance: 'Deed / Mineral Conveyance', oilGasLease: 'Oil & Gas Lease', assignment: 'Assignment of Lease',
+    orriAssignment: 'ORRI Assignment', affidavitOfHeirship: 'Affidavit of Heirship', unitDesignation: 'Unit Designation',
+    completionReport: 'Completion Report' }[k] || k);
+}
+
+/* ------------------------------------------------------- Ownership tree ----- */
+function renderOwnership(r) {
+  const o = r.ownership;
+  const npri = o.npris[0];
+  const npriOwners = npri ? npri.owners.map((x) =>
+    `<div class="tree-row"><span class="nm">${esc(x.name)}</span>
+       <span class="frac">${esc(x.share.toFractionString())} of NPRI</span>
+       <span class="role">non-participating royalty</span></div>`).join('') : '';
+  const minerals = o.minerals.map((m) =>
+    `<div class="tree-row"><span class="nm">${esc(m.name)}</span>
+       <span class="frac">${esc(m.fraction.toFractionString())} minerals</span>
+       <span class="role">executive + royalty</span></div>`).join('');
+  const wi = o.wi.map((w) =>
+    `<div class="tree-row"><span class="nm">${esc(w.name)}</span>
+       <span class="frac">${esc(w.fraction.toFractionString())} WI</span></div>`).join('');
+  const orris = o.orris.map((x) =>
+    `<div class="tree-row"><span class="nm">${esc(x.name)}</span>
+       <span class="frac">${esc(x.quantum.toDecimal(4))} ORRI</span></div>`).join('');
+
+  const royalty = r.doi.royalty, wiGross = r.doi.wiGross;
+  const bar = `<div class="bar">
+    <span style="width:${pct(r.doi.totalNpri)}; background:#34A853" title="NPRI"></span>
+    <span style="width:${pct(r.doi.mineralRoyaltyPool)}; background:#003070" title="Mineral royalty"></span>
+    <span style="width:${pct(r.doi.totalOrri)}; background:#6070B0" title="ORRI"></span>
+    <span style="width:${pct(r.doi.wiNet)}; background:#002040" title="WI net"></span>
+  </div>`;
+
+  return `<div class="card">
+    <div class="card__title">How 100% of production splits (8/8 → 1.00000000)</div>
+    ${bar}
+    <div class="kpi-row note">
+      <span class="badge badge--ok"><span class="dot" style="background:#34A853"></span>NPRI ${r.doi.totalNpri.toDecimal(4)}</span>
+      <span class="badge badge--info"><span class="dot" style="background:#003070"></span>Mineral royalty ${r.doi.mineralRoyaltyPool.toDecimal(4)}</span>
+      <span class="badge badge--info" style="color:#3B5270"><span class="dot" style="background:#6070B0"></span>ORRI ${r.doi.totalOrri.toDecimal(4)}</span>
+      <span class="badge badge--info"><span class="dot" style="background:#002040"></span>WI net ${r.doi.wiNet.toDecimal(4)}</span>
+    </div>
+  </div>
+  <div class="flow">
+    <div class="card"><div class="card__title">Royalty Estate · ${royalty.toDecimal(4)} of 8/8</div>
+      <div class="pool"><h4>Non-Participating Royalty (carved off the top)</h4>${npriOwners}</div>
+      <div class="pool" style="margin-top:12px"><h4>Participating Minerals (share remaining royalty)</h4>${minerals}</div>
+    </div>
+    <div class="card"><div class="card__title">Leasehold Estate · ${wiGross.toDecimal(4)} of 8/8</div>
+      <div class="pool"><h4>Overriding Royalty (carved off the WI)</h4>${orris}</div>
+      <div class="pool" style="margin-top:12px"><h4>Working Interest</h4>${wi}</div>
+    </div>
+  </div>`;
+}
+function pct(frac) { return (frac.toNumber() * 100).toFixed(4) + '%'; }
+
+/* --------------------------------------------------------- Lease step ------ */
+function renderLease(r) {
+  const L = r.lease;
+  const rows = r.ownership.orris.map((o) =>
+    `<tr><td>${esc(o.name)}</td><td>ORRI</td><td class="num">${o.quantum.toDecimal(4)}</td><td class="src">${esc(o.id)}</td></tr>`).join('');
+  return `<div class="summary-grid">
+      <div class="stat"><div class="stat__label">Operator / WI</div><div class="stat__value">${esc(r.ownership.wi.map(w=>w.name).join(', '))}</div></div>
+      <div class="stat"><div class="stat__label">Lease Royalty</div><div class="stat__value">${L.royalty.toFractionString()}</div><div class="stat__hint">${L.royalty.toDecimal(5)}</div></div>
+      <div class="stat"><div class="stat__label">Total ORRI Burden</div><div class="stat__value">${r.doi.totalOrri.toDecimal(4)}</div></div>
+      <div class="stat"><div class="stat__label">Net WI NRI</div><div class="stat__value">${r.doi.wiNet.toDecimal(5)}</div><div class="stat__hint">8/8 − royalty − ORRI</div></div>
+    </div>
+    <div class="card"><div class="card__title">Overriding Royalty Interests</div>
+      <div class="table-wrap"><table class="data"><thead><tr><th>Owner</th><th>Type</th><th>Quantum</th><th>Source</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="4" class="muted">None of record.</td></tr>'}</tbody></table></div>
+    </div>
+    ${L.pughDepthNote ? `<div class="card"><div class="card__title">Lease provisions</div>
+      <p class="tl-meta"><strong>Pugh / depth:</strong> ${esc(L.pughDepthNote)}</p>
+      ${L.noDeductionsNote ? `<p class="tl-meta"><strong>Cost-bearing:</strong> ${esc(L.noDeductionsNote)}</p>` : ''}</div>` : ''}`;
+}
+
+/* ----------------------------------------------------------- DOI deck ------ */
+function renderDoi(r) {
+  const unit = r.unit;
+  const useUnit = BASIS === 'unit' && unit;
+  const rows = [...r.doi.rows].sort((a, b) => b.nri.toNumber() - a.nri.toNumber());
+  const body = rows.map((row) => {
+    const dec = (useUnit ? row.unitNri : row.nri).toDecimal(8);
+    return `<tr>
+      <td>${esc(row.owner)}</td>
+      <td><span class="type-pill" data-t="${esc(row.type)}">${esc(row.type)}</span></td>
+      <td class="muted">${esc(row.fractionLabel)}</td>
+      <td class="num">${dec}</td>
+      <td class="src">${esc(row.source)}</td>
+    </tr>`;
+  }).join('');
+  const totalFrac = useUnit ? r.doi.unitFactor : r.doi.total;
+  const totalDec = totalFrac.toDecimal(8);
+  const balanced = r.doi.balances;
+
+  return `<div class="toolbar">
+      <div class="toggle">
+        <button class="${BASIS==='tract'?'is-active':''}" data-basis="tract">Tract basis (8/8)</button>
+        <button class="${BASIS==='unit'?'is-active':''}" data-basis="unit" ${unit?'':'disabled'}>Unit basis (×${unit?r.doi.unitFactor.toDecimal(3):'—'})</button>
+      </div>
+      <span class="${balanced?'badge badge--ok':'badge badge--critical'}">
+        ${balanced ? '✓ Balances to exactly 1.00000000' : '✗ Does NOT balance — export blocked'}
+      </span>
+      <span style="flex:1"></span>
+      <button class="btn" id="dl-csv">Export DOI CSV</button>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Owner Name</th><th>Interest Type</th><th>Fractional Share</th>
+          <th class="num">${useUnit ? 'Unit NRI' : 'NRI'} Decimal</th><th>Source</th></tr></thead>
+        <tbody>${body}</tbody>
+        <tfoot><tr><td colspan="3">TOTAL ${useUnit ? '(subject tract share of unit)' : ''}</td>
+          <td class="num">${totalDec}</td><td></td></tr></tfoot>
+      </table></div>
+    </div>
+    ${useUnit ? `<p class="note">Unit basis applies the ${r.doi.unitFactor.toFractionString()} participation factor (${unit.tractAcres}/${unit.unitAcres} ac). Tracts 2 & 3 are unmodeled, so this does not close to 1.0 across the full ${esc(unit.name)}.</p>` : ''}`;
+}
+
+function toCsv(r) {
+  const useUnit = BASIS === 'unit' && r.unit;
+  const head = ['Owner Name', 'Interest Type', 'Fractional Share', useUnit ? 'Unit NRI Decimal' : 'NRI Decimal', 'Source'];
+  const lines = [head.join(',')];
+  for (const row of r.doi.rows) {
+    const dec = (useUnit ? row.unitNri : row.nri).toDecimal(8);
+    lines.push([row.owner, row.type, row.fractionLabel, dec, row.source]
+      .map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','));
+  }
+  lines.push(['TOTAL', '', '', (useUnit ? r.doi.unitFactor : r.doi.total).toDecimal(8), ''].map((c)=>`"${c}"`).join(','));
+  return lines.join('\n');
+}
+
+/* --------------------------------------------------------- Curative -------- */
+function renderCurative(r) {
+  const counts = { critical: 0, high: 0, medium: 0, info: 0 };
+  r.curative.forEach((c) => counts[c.severity]++);
+  const chips = `<div class="toolbar">
+    <span class="badge badge--critical">${counts.critical} Critical</span>
+    <span class="badge badge--high">${counts.high} High</span>
+    <span class="badge badge--medium">${counts.medium} Medium</span>
+    <span class="badge badge--info">${counts.info} Info</span></div>`;
+  const flags = r.curative.map((c) => `
+    <div class="flag flag--${c.severity}"><div class="flag__rail"></div>
+      <div class="flag__body">
+        <div class="flag__head">
+          <span class="badge badge--${c.severity}">${c.severity.toUpperCase()}</span>
+          <span class="flag__title">${esc(c.title)}</span>
+          <span class="flag__code">${esc(c.code)}</span>
+        </div>
+        <div class="flag__detail">${mdBold(esc(c.detail))}</div>
+      </div></div>`).join('');
+  return chips + flags;
+}
+function mdBold(s) { return s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
+
+/* ----------------------------------------------------------- Summary ------- */
+function renderSummary(r) {
+  return `<div class="summary-grid">
+    <div class="stat"><div class="stat__label">Tract</div><div class="stat__value" style="font-size:16px">${esc(r.project.tract.name)}</div><div class="stat__hint">${r.project.tract.grossAcres} gross acres · ${esc(r.project.tract.county || '')} Co., ${esc(r.project.tract.state || '')}</div></div>
+    <div class="stat"><div class="stat__label">Stakeholders</div><div class="stat__value">${r.doi.rows.length}</div><div class="stat__hint">on the DOI deck</div></div>
+    <div class="stat"><div class="stat__label">Deck Balance</div><div class="stat__value">${r.doi.total.toDecimal(8)}</div><div class="stat__hint">${r.doi.balances ? '✓ exact' : '✗ unbalanced'}</div></div>
+    <div class="stat"><div class="stat__label">Curative Items</div><div class="stat__value">${r.curative.length}</div><div class="stat__hint">${r.curative.filter(c=>c.severity==='critical').length} critical</div></div>
+  </div>`;
+}
+
+/* ------------------------------------------------------------- Wire --------- */
+/* --------------------------------------------------------- Intake ---------- */
+const isHttp = () => typeof location !== 'undefined' && /^https?:$/.test(location.protocol);
+
+async function probeBackend() {
+  if (!isHttp()) return;
+  try {
+    const h = await (await fetch('/api/health')).json();
+    BACKEND = { available: true, hasKey: !!h.hasKey, model: h.model };
+  } catch { BACKEND = { available: false, hasKey: false, model: null }; }
+  if (MODE === 'intake') paint();
+}
+
+function abToBase64(buf) {
+  const bytes = new Uint8Array(buf); let bin = ''; const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  return btoa(bin);
+}
+let _pdfjs = null;
+async function loadPdfJs() {
+  if (_pdfjs) return _pdfjs;
+  const v = '4.7.76';
+  const lib = await import(`https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.min.mjs`);
+  lib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${v}/build/pdf.worker.min.mjs`;
+  return (_pdfjs = lib);
+}
+async function pdfToText(arrayBuffer) {
+  const pdfjs = await loadPdfJs();
+  const doc = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map((it) => it.str).join(' ') + '\n';
+  }
+  return text.trim();
+}
+async function backendExtract(payload) {
+  const res = await fetch('/api/extract', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+  return res.json();
+}
+
+function backendChip() {
+  if (!isHttp()) return `<span class="badge badge--medium" title="Open via the backend (npm start) to enable AI">Offline file · heuristic only</span>`;
+  if (!BACKEND.available) return `<span class="badge badge--medium">AI backend: not detected</span>`;
+  if (!BACKEND.hasKey) return `<span class="badge badge--info">AI backend: connected · no key set</span>`;
+  return `<span class="badge badge--ok">AI backend: ready · ${esc(BACKEND.model || 'claude')}</span>`;
+}
+
+function renderIntake() {
+  const text = INTAKE_TEXT != null ? INTAKE_TEXT : (ENGINE.sourceText || '');
+  const aiReady = isHttp() && BACKEND.available && BACKEND.hasKey;
+  const pdfNote = INTAKE_PDF
+    ? `PDF loaded: <b>${esc(INTAKE_PDF.name)}</b> (~${Math.round(INTAKE_PDF.base64.length * 0.75 / 1024)} KB). “Extract with Claude” reads the PDF directly (incl. scanned pages); “Extract (heuristic)” uses the text below.`
+    : 'Paste text, or load a <code>.txt</code> / <code>.pdf</code>. Text-PDFs are parsed in-browser; scanned PDFs need the Claude backend.';
+  return `<div class="card">
+      <div class="card__title">Import title records</div>
+      <p class="step__sub" style="margin-bottom:12px">Two ways in: the <b>offline heuristic</b> (paste / <code>.txt</code> / text-PDF), or <b>Claude AI</b> via the backend
+        (handles scanned PDFs and free-form deeds). Both produce the same review with a source snippet and confidence per field.</p>
+      <div class="toolbar">
+        <label class="btn">Load file (.txt/.pdf)<input id="intake-file" type="file" accept=".txt,.md,.csv,.pdf,text/plain,application/pdf" style="display:none"></label>
+        <button class="btn" id="intake-sample">Load sample</button>
+        ${backendChip()}
+        <span style="flex:1"></span>
+        <button class="btn" id="extract-btn">Extract (heuristic)</button>
+        <button class="btn btn--primary" id="extract-ai-btn" ${aiReady ? '' : 'disabled'} title="${aiReady ? 'Extract with Claude' : 'Run the backend with ANTHROPIC_API_KEY to enable'}">Extract with Claude&nbsp;▷</button>
+      </div>
+      <div id="intake-hint" class="note" style="margin-bottom:8px">${pdfNote}</div>
+      <textarea id="intake-text" spellcheck="false" style="width:100%; min-height:340px; font-family:var(--font-mono); font-size:12.5px;
+        border:1px solid var(--border-strong); border-radius:var(--r-md); padding:14px; resize:vertical; color:var(--ink); background:var(--surface-2);">${esc(text)}</textarea>
+      <p class="note" style="margin-top:10px">Heuristic mode keeps data in the browser. AI mode sends the document to your backend (<code>server/api.mjs</code>),
+        which calls Claude with the key held server-side.</p>
+    </div>`;
+}
+
+/* --------------------------------------------------------- Review ---------- */
+function confChip(c) {
+  const pctv = Math.round((c.confidence || 0) * 100);
+  const cls = c.needsDecision ? 'high' : c.confidence >= 0.8 ? 'ok' : c.confidence >= 0.6 ? 'info' : 'medium';
+  return `<span class="badge badge--${cls}">${c.needsDecision ? 'Needs decision' : pctv + '%'}</span>`;
+}
+function fieldRow(di, fi, f) {
+  const editable = typeof f.value !== 'object';
+  const valCell = editable
+    ? `<input class="rv-input" data-d="${di}" data-f="${fi}" value="${esc(f.value)}" />`
+    : `<code class="src">${esc(JSON.stringify(f.value))}</code>`;
+  return `<tr class="${f.needsDecision ? 'rv-needs' : ''}">
+      <td><label class="rv-inc"><input type="checkbox" data-d="${di}" data-f="${fi}" ${f.status === 'rejected' ? '' : 'checked'}/> ${esc(f.label)}</label></td>
+      <td>${valCell}</td>
+      <td>${confChip(f)}</td>
+      <td class="src" title="${esc(f.snippet || '')}">${esc((f.snippet || '').slice(0, 70))}${(f.snippet || '').length > 70 ? '…' : ''}</td>
+    </tr>`;
+}
+function renderReview() {
+  const r = EXTRACTION;
+  const need = r.documents.reduce((a, d) => a + d.fields.filter((f) => f.needsDecision).length, 0);
+  const total = r.documents.reduce((a, d) => a + d.fields.length, 0);
+  const cards = r.documents.map((d, di) => `
+    <div class="card">
+      <div class="flag__head" style="margin-bottom:12px">
+        <span class="type-pill" data-t="Working Interest (NRI)">${esc(prettyKind(d.kind))}</span>
+        <span class="flag__title">${esc(d.title)}</span>
+        <span class="flag__code">${esc(d.id)}</span>
+      </div>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Field (include?)</th><th>Value</th><th>Confidence</th><th>Source snippet</th></tr></thead>
+        <tbody>${d.fields.map((f, fi) => fieldRow(di, fi, f)).join('')}</tbody>
+      </table></div>
+    </div>`).join('');
+  return `<div class="summary-grid">
+      <div class="stat"><div class="stat__label">Documents</div><div class="stat__value">${r.documents.length}</div></div>
+      <div class="stat"><div class="stat__label">Fields extracted</div><div class="stat__value">${total}</div></div>
+      <div class="stat"><div class="stat__label">Need your decision</div><div class="stat__value" style="color:${need?'#B4530E':'var(--smepro-success)'}">${need}</div></div>
+      <div class="stat"><div class="stat__label">Parties</div><div class="stat__value">${r.parties.length}</div></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="back-intake">← Back to text</button>
+      <span class="note">Edit any value inline; untick to exclude. Amber rows are SME judgment calls.</span>
+      <span style="flex:1"></span>
+      <button class="btn btn--primary" id="build-btn">Build DOI Analysis →</button>
+    </div>
+    ${r.notes && r.notes.length ? `<div class="flag flag--medium"><div class="flag__rail"></div><div class="flag__body"><div class="flag__detail">${r.notes.map(esc).join('<br/>')}</div></div></div>` : ''}
+    ${cards}`;
+}
+
+const STEPS = [
+  { id: 'overview',  num: '•', label: 'Overview',          render: renderSummary,   eyebrow: 'Title Project', title: (r)=>esc(r.project.name), sub: (r)=>esc(r.project.tract.legal) },
+  { id: 'runsheet',  num: '1', label: 'Run Sheet',         render: renderRunSheet,  eyebrow: 'Step 1', title: ()=>'Chronological Run Sheet', sub: ()=>'Every instrument in date order, with its effect on the estate.' },
+  { id: 'ownership', num: '2', label: 'Ownership Tree',    render: renderOwnership, eyebrow: 'Step 2', title: ()=>'Property Fractions & Ownership', sub: ()=>'How the original 100% mineral estate split into today’s royalty and working-interest owners.' },
+  { id: 'lease',     num: '3', label: 'Lease & Royalty',   render: renderLease,     eyebrow: 'Step 3', title: ()=>'Active Lease & Royalty Analysis', sub: ()=>'The governing lease, the operator, and every overriding royalty burden.' },
+  { id: 'doi',       num: '4', label: 'DOI Deck',          render: renderDoi,       eyebrow: 'Step 4', title: ()=>'Final Division of Interest', sub: ()=>'Net Revenue Interest for every stakeholder. Must sum to exactly 1.00000000.' },
+  { id: 'curative',  num: '5', label: 'Curative & Defects', render: renderCurative, eyebrow: 'Step 5', title: ()=>'Title Curative & Defects', sub: ()=>'Judgment calls and gaps a landman must resolve before relying on this deck.' },
+];
+
+const stepExists = (id) => STEPS.some((s) => s.id === id);
+const initHash = (location.hash || '').replace('#', '');
+let ACTIVE = stepExists(initHash) ? initHash : 'overview';
+if (initHash === 'intake') MODE = 'intake';
+window.addEventListener('hashchange', () => {
+  const id = (location.hash || '').replace('#', '');
+  if (id === 'intake') { MODE = 'intake'; paint(); }
+  else if (stepExists(id)) { MODE = 'analysis'; ACTIVE = id; paint(); }
+});
+
+function paint() {
+  // --- Nav ---
+  const intakeActive = MODE === 'intake' || MODE === 'review';
+  const steps = STEPS.map((s) => `<div class="nav__item ${MODE==='analysis' && s.id===ACTIVE?'is-active':''}" data-step="${s.id}">
+      <span class="nav__num">${s.num}</span>${s.label}</div>`).join('');
+  $('#nav-items').innerHTML = `
+    <div class="nav__group">Import</div>
+    <div class="nav__item ${intakeActive?'is-active':''}" data-go="intake"><span class="nav__num">↑</span>Intake &amp; Extract</div>
+    <hr class="nav__hr"/>
+    <div class="nav__group">Workflow</div>${steps}
+    <hr class="nav__hr"/>
+    <div class="nav__legal">${esc(RESULT.project.name)}</div>`;
+
+  // --- Main ---
+  let head, bodyHtml;
+  if (MODE === 'intake') {
+    head = { eyebrow: 'Import', title: 'Intake &amp; Extract', sub: 'Bring title records in, then review what was extracted before computing decimals.' };
+    bodyHtml = renderIntake();
+  } else if (MODE === 'review') {
+    head = { eyebrow: 'Import · Review & Confirm', title: 'Confirm Extracted Facts', sub: 'Every field shows its source snippet and a confidence score. Resolve the amber judgment calls, then build the analysis.' };
+    bodyHtml = renderReview();
+  } else {
+    const s = STEPS.find((x) => x.id === ACTIVE) || STEPS[0];
+    head = { eyebrow: s.eyebrow, title: s.title(RESULT), sub: s.sub(RESULT) };
+    bodyHtml = s.render(RESULT);
+  }
+  $('#main').innerHTML = `<div class="step is-active">
+      <div class="step__head">
+        <div class="step__eyebrow">${head.eyebrow}</div>
+        <h1 class="step__title">${head.title}</h1>
+        <p class="step__sub">${head.sub}</p>
+      </div>
+      ${bodyHtml}
+      <div class="disclaimer">Title-examination work product for landman/analyst review. Not a title opinion or legal advice.
+        Internal arithmetic is exact (rational); displayed decimals are round-half-up to 8 places.</div>
+    </div>`;
+  wireEvents();
+}
+
+function goAnalysis(stepId) { MODE = 'analysis'; ACTIVE = stepId || 'overview'; if (history.replaceState) history.replaceState(null, '', '#' + ACTIVE); paint(); }
+
+function wireEvents() {
+  document.querySelectorAll('[data-go]').forEach((el) =>
+    el.addEventListener('click', () => { MODE = el.getAttribute('data-go'); if (MODE === 'intake' && history.replaceState) history.replaceState(null, '', '#intake'); paint(); }));
+  document.querySelectorAll('[data-step]').forEach((el) =>
+    el.addEventListener('click', () => goAnalysis(el.getAttribute('data-step'))));
+  document.querySelectorAll('[data-basis]').forEach((el) =>
+    el.addEventListener('click', () => { if (!el.disabled) { BASIS = el.getAttribute('data-basis'); paint(); } }));
+
+  const csv = $('#dl-csv');
+  if (csv) csv.addEventListener('click', () => {
+    const blob = new Blob([toCsv(RESULT)], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `DOI_${RESULT.project.name.replace(/[^a-z0-9]+/gi, '_')}_${BASIS}.csv`;
+    a.click(); URL.revokeObjectURL(a.href);
+  });
+
+  // Intake
+  const ta = $('#intake-text');
+  if (ta) ta.addEventListener('input', () => { INTAKE_TEXT = ta.value; });
+  const sampleBtn = $('#intake-sample');
+  if (sampleBtn) sampleBtn.addEventListener('click', () => { INTAKE_TEXT = ENGINE.sourceText || ''; INTAKE_PDF = null; paint(); });
+  const hint = (html) => { const h = $('#intake-hint'); if (h) h.innerHTML = html; };
+
+  const fileInput = $('#intake-file');
+  if (fileInput) fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0]; if (!file) return;
+    const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    if (isPdf) {
+      const buf = await file.arrayBuffer();
+      INTAKE_PDF = { name: file.name, base64: abToBase64(buf), mediaType: 'application/pdf' };
+      hint(`PDF loaded: <b>${esc(file.name)}</b>. Reading text in-browser…`);
+      try { const txt = await pdfToText(buf.slice(0)); INTAKE_TEXT = txt; paint(); }
+      catch { hint(`PDF loaded: <b>${esc(file.name)}</b>. In-browser text layer unavailable (likely scanned or offline) — use <b>Extract with Claude</b>.`); }
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => { INTAKE_TEXT = String(reader.result || ''); INTAKE_PDF = null; paint(); };
+      reader.readAsText(file);
+    }
+  });
+
+  const extractBtn = $('#extract-btn');
+  if (extractBtn) extractBtn.addEventListener('click', () => {
+    const text = ($('#intake-text') && $('#intake-text').value) || '';
+    if (!text.trim()) { alert('Paste or load some title text first (heuristic mode needs a text layer).'); return; }
+    try { EXTRACTION = ENGINE.extractFromText(text); MODE = 'review'; paint(); }
+    catch (err) { alert('Extraction failed: ' + err.message); }
+  });
+
+  const aiBtn = $('#extract-ai-btn');
+  if (aiBtn) aiBtn.addEventListener('click', async () => {
+    aiBtn.disabled = true; const label = aiBtn.innerHTML; aiBtn.innerHTML = 'Extracting…';
+    try {
+      const text = ($('#intake-text') && $('#intake-text').value) || '';
+      const payload = INTAKE_PDF ? { pdfBase64: INTAKE_PDF.base64, mediaType: INTAKE_PDF.mediaType, text: text || undefined } : { text };
+      EXTRACTION = await backendExtract(payload);
+      MODE = 'review'; paint();
+    } catch (err) {
+      aiBtn.disabled = false; aiBtn.innerHTML = label;
+      alert('Claude extraction failed:\n' + err.message);
+    }
+  });
+
+  // Review
+  const back = $('#back-intake');
+  if (back) back.addEventListener('click', () => { MODE = 'intake'; paint(); });
+  document.querySelectorAll('.rv-input').forEach((el) => el.addEventListener('input', () => {
+    const f = EXTRACTION.documents[+el.dataset.d].fields[+el.dataset.f];
+    f.value = el.value; f.status = 'edited';
+  }));
+  document.querySelectorAll('.rv-inc input').forEach((el) => el.addEventListener('change', () => {
+    const f = EXTRACTION.documents[+el.dataset.d].fields[+el.dataset.f];
+    f.status = el.checked ? (f.status === 'rejected' ? 'pending' : f.status) : 'rejected';
+  }));
+  const build = $('#build-btn');
+  if (build) build.addEventListener('click', () => {
+    try {
+      const project = ENGINE.buildProjectFromExtraction(EXTRACTION);
+      RESULT = ENGINE.analyzeTitleProject(project);
+      $('#asof').textContent = RESULT.project.asOfDate || '';
+      goAnalysis('overview');
+    } catch (err) { alert('Could not build analysis:\n' + err.message); }
+  });
+}
+
+$('#asof').textContent = RESULT.project.asOfDate || '';
+paint();
+probeBackend();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DOI Sidebar — embed demo</title>
+  <link rel="stylesheet" href="./doi-sidebar.css" />
+  <style>
+    body { margin:0; font-family:'Segoe UI',system-ui,sans-serif; }
+    .shell { display:grid; grid-template-columns:1fr 440px; height:100vh; }
+    .map { background:
+        linear-gradient(0deg, rgba(0,48,112,.05) 1px, transparent 1px) 0 0/40px 40px,
+        linear-gradient(90deg, rgba(0,48,112,.05) 1px, transparent 1px) 0 0/40px 40px,
+        #eef2f6;
+      position:relative; }
+    .map__bar { position:absolute; top:0; left:0; right:0; padding:12px 18px; background:#002040; color:#cfe0f0;
+      font-size:13px; display:flex; gap:14px; align-items:center; }
+    .map__bar b { color:#fff; }
+    .unit { position:absolute; left:34%; top:40%; width:190px; height:150px; transform:rotate(-6deg);
+      border:2px solid #34A853; background:rgba(52,168,83,.12); border-radius:8px; cursor:pointer;
+      display:grid; place-items:center; color:#1B7A36; font-weight:700; font-size:13px; box-shadow:0 8px 24px -8px rgba(0,48,112,.35); }
+    .well { position:absolute; left:30%; top:62%; width:12px; height:12px; border-radius:50%; background:#002040; border:3px solid #fff; box-shadow:0 0 0 2px #002040; }
+    #rail { height:100vh; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="map">
+      <div class="map__bar">Reporter <b>IOS+</b> · Dashboard / Map <span style="opacity:.7">— click the Morales Unit to scope the panel →</span></div>
+      <div class="unit" id="unit">Morales Unit<br/>320 ac</div>
+      <div class="well" title="Morales Unit #1H"></div>
+    </div>
+    <div id="rail"></div>
+  </div>
+
+  <script type="module">
+    import { mountDoiSidebar } from './doi-sidebar.mjs';
+    import { bentonMorales } from '../engine/cases/benton-morales.mjs';
+    import { bentonMoralesSource } from '../engine/cases/benton-morales-source.mjs';
+    import { extractFromText } from '../engine/extraction.mjs';
+
+    const sb = mountDoiSidebar(document.getElementById('rail'), {
+      project: bentonMorales,
+      context: { label: 'Morales Unit #1H', sublabel: 'Tract 1 · 40 ac · A-112' },
+      sampleText: bentonMoralesSource,
+      // Demo stand-in for the authenticated backend call (uses the offline heuristic
+      // so it runs with no key). In Reporter IOS+ this POSTs to /api/title/extract.
+      extract: async (payload) => extractFromText(payload.text || ''),
+      onDeckBuilt: (analysis) => console.log('deck built; balances =', analysis.doi.balances),
+    });
+
+    // Map selection → scope the panel (this is the integration contract).
+    document.getElementById('unit').addEventListener('click', () =>
+      sb.setContext({ label: 'Morales Unit #1H', sublabel: 'Tract 1 · 40 ac · A-112' }));
+  </script>
+</body>
+</html>

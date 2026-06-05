@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SMEPro · DOI Builder</title>
+  <meta name="description" content="SMEPro DOI Builder — title-to-decimal Division of Interest engine for upstream oil & gas." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/web/styles.css" />
+</head>
+<body>
+
+  <!-- TOP UTILITY STRIP (official SMEPro chrome) -->
+  <div class="utility">
+    <div class="utility-inner">
+      <div class="utility-badges">
+        <span class="utility-badge">SOC 2 Type II</span>
+        <span class="utility-badge">ISO 27001</span>
+        <span class="utility-badge">Deterministic Math Engine</span>
+        <span class="utility-badge">Patent Pending · 63/986,802</span>
+      </div>
+      <div class="utility-links">
+        <a href="#">Trust Center</a>
+        <a href="#">IP Portfolio</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP HEADER -->
+  <header class="app-header">
+    <div class="brand">
+      <!-- Official SMEPro 4-quadrant mark: IOS+ · Yellow Brick Road · Universal Decoding Matrix · Compliance OS -->
+      <svg class="brand__logo" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="SMEPro Technologies">
+        <defs>
+          <linearGradient id="g-navy" x1="0" y1="0" x2="16" y2="16" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0E2548"/><stop offset="100%" stop-color="#061224"/></linearGradient>
+          <linearGradient id="g-green" x1="20" y1="0" x2="36" y2="16" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34A853"/><stop offset="100%" stop-color="#1B7A36"/></linearGradient>
+          <linearGradient id="g-accent" x1="0" y1="20" x2="16" y2="36" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#557095"/><stop offset="100%" stop-color="#3B5270"/></linearGradient>
+          <linearGradient id="g-dnavy" x1="20" y1="20" x2="36" y2="36" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0A1E3D"/><stop offset="100%" stop-color="#051024"/></linearGradient>
+        </defs>
+        <g class="quad q-tl">
+          <rect x="0" y="0" width="16" height="16" rx="3" fill="url(#g-navy)"/>
+          <path d="M8 4V12M4 8H12" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+        </g>
+        <g class="quad q-tr">
+          <rect x="20" y="0" width="16" height="16" rx="3" fill="url(#g-green)"/>
+          <path d="M23 14.5 C 24 10.5, 27 8.5, 31 5.5" stroke="#fff" stroke-width="0.8" stroke-dasharray="1.5,1.5" stroke-linecap="round" fill="none" opacity="0.9"/>
+          <path d="M28 8 L 31 5 L 33 2" stroke="#fff" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.95"/>
+          <circle cx="28" cy="8" r="0.8" fill="#fff"/><circle cx="31" cy="5" r="0.8" fill="#fff"/><circle cx="33" cy="2" r="1" fill="#fff"/>
+        </g>
+        <g class="quad q-bl">
+          <rect x="0" y="20" width="16" height="16" rx="3" fill="url(#g-accent)"/>
+          <path d="M3 23 H13 M3 27 H13 M3 31 H13" stroke="#fff" stroke-width="0.6" opacity="0.3"/>
+          <path d="M4 23 V31 M8 23 V31 M12 23 V31" stroke="#fff" stroke-width="0.6" opacity="0.3"/>
+          <circle cx="4" cy="23" r="0.9" fill="#fff" opacity="0.8"/><circle cx="8" cy="23" r="0.9" fill="#fff" opacity="0.8"/><circle cx="12" cy="23" r="0.9" fill="#fff" opacity="0.8"/>
+          <circle cx="4" cy="27" r="0.9" fill="#fff" opacity="0.8"/><circle cx="8" cy="27" r="1.1" fill="#fff"/><circle cx="12" cy="27" r="0.9" fill="#fff" opacity="0.8"/>
+          <circle cx="4" cy="31" r="0.9" fill="#fff" opacity="0.8"/><circle cx="8" cy="31" r="0.9" fill="#fff" opacity="0.8"/><circle cx="12" cy="31" r="0.9" fill="#fff" opacity="0.8"/>
+        </g>
+        <g class="quad q-br">
+          <rect x="20" y="20" width="16" height="16" rx="3" fill="url(#g-dnavy)"/>
+          <path d="M23 23.5 L28 21.5 L33 23.5 C33 27, 31 30.5, 28 32.5 C25 30.5, 23 27, 23 23.5 Z" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" fill="none" opacity="0.85"/>
+          <path d="M26 27 L27.5 28.5 L30.5 25.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85"/>
+        </g>
+      </svg>
+      <div class="brand__title"><b>SMEPro</b><span>Technologies</span></div>
+      <div class="brand__divider"></div>
+      <div class="brand__product"><b>DOI&nbsp;Builder</b><span>Title-to-Decimal Engine</span></div>
+    </div>
+    <div class="app-header__spacer"></div>
+    <div class="app-header__meta"><b>v0 MVP</b><br/>Analysis as of <b id="asof"></b></div>
+  </header>
+
+  <div class="layout">
+    <nav class="nav" id="nav-items"></nav>
+    <main class="main" id="main"></main>
+  </div>
+
+  <footer class="app-footer">
+    <div class="foot-inner">
+      <div>&copy; 2026 <span class="accent">SMEPro Technologies LLC</span> · All rights reserved · Patent Pending — U.S. Provisional Application No. 63/986,802</div>
+      <div class="foot-links"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Trademarks</a><a href="#">Security</a></div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { analyzeTitleProject } from '/engine/engine.mjs';
+    import { bentonMorales } from '/engine/cases/benton-morales.mjs';
+    import { bentonMoralesSource } from '/engine/cases/benton-morales-source.mjs';
+    import { extractFromText, buildProjectFromExtraction } from '/engine/extraction.mjs';
+    import { Fraction } from '/engine/fraction.mjs';
+    window.SMEPRO = { analyzeTitleProject, project: bentonMorales, Fraction,
+      extractFromText, buildProjectFromExtraction, sourceText: bentonMoralesSource };
+    await import('/web/app.js');
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "smepro-doi",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SMEPro DOI Builder — title-to-decimal engine and light-themed web MVP for building Division of Interest decks from title records.",
+  "scripts": {
+    "test": "node --test",
+    "build": "node build.mjs",
+    "serve": "node serve.mjs",
+    "start": "node server/api.mjs",
+    "report": "node engine/cli.mjs"
+  },
+  "engines": { "node": ">=22" }
+}
