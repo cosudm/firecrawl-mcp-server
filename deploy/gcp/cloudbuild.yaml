@@ -1,0 +1,52 @@
+# Cloud Build pipeline: build the Firecrawl MCP image, push to Artifact Registry,
+# and deploy to Cloud Run. Wire this to a Cloud Build trigger on your default
+# branch for continuous deployment.
+#
+# Substitutions (override per-trigger as needed):
+substitutions:
+  _REGION: us-central1
+  _REPO: firecrawl-mcp
+  _SERVICE: firecrawl-mcp
+  _SECRET: firecrawl-api-key
+
+steps:
+  # 1) Build the image from the repo-root Dockerfile (node serves on $PORT).
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest
+      - -f
+      - Dockerfile
+      - .
+
+  # 2) Push both tags.
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "--all-tags", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}"]
+
+  # 3) Deploy to Cloud Run. The key is injected from Secret Manager; the image
+  #    carries no credentials. Service stays private (no --allow-unauthenticated).
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+      - --region=${_REGION}
+      - --port=8080
+      - --set-env-vars=HTTP_STREAMABLE_SERVER=true,FIRECRAWL_RETRY_MAX_ATTEMPTS=5
+      - --set-secrets=FIRECRAWL_API_KEY=${_SECRET}:latest
+      - --cpu-boost
+      - --min-instances=0
+      - --max-instances=5
+      - --timeout=3600
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY
