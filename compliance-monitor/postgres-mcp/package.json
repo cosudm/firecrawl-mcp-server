@@ -1,0 +1,17 @@
+{
+  "name": "compliance-postgres-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Thin, write-scoped MCP server over the compliance_* tables. Exposes a handful of parameterized tools (no free-form SQL) so Claude can read obligations and persist run-check / discovery results safely.",
+  "bin": { "compliance-postgres-mcp": "server.mjs" },
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "pg": "^8.13.1",
+    "zod": "^3.23.8"
+  },
+  "engines": { "node": ">=18.0.0" }
+}

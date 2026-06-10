@@ -81,9 +81,10 @@ CREATE TABLE IF NOT EXISTS compliance_obligations (
   -- ----- Firecrawl monitoring fields (the run-check substrate) -----
   regulatory_url      text,                            -- target page Firecrawl scrapes for this rule
   css_selector        text,                            -- optional: container to parse (strips sidebar noise)
-  current_version_hash text,                           -- SHA-256 of last accepted raw_markdown_snapshot
-  raw_markdown_snapshot text,                          -- clean markdown baseline for text-diffing
-  last_scraped_at     timestamptz,                     -- last time Firecrawl fetched the source
+  firecrawl_monitor_id text,                           -- id of the Firecrawl monitor watching this URL (Loop 1)
+  current_version_hash text,                           -- SHA-256 of last accepted snapshot (audit; Firecrawl also retains)
+  raw_markdown_snapshot text,                          -- last accepted markdown (audit; the monitor stores diffs server-side)
+  last_scraped_at     timestamptz,                     -- last time Firecrawl checked the source
   last_verified_at    timestamptz,                     -- last run-check that passed with NO change
   compliance_status   text NOT NULL DEFAULT 'Current'  -- run-check state machine
                         CHECK (compliance_status IN ('Current','Pending Review','Changed','Error','Unmonitored')),
@@ -101,6 +102,9 @@ CREATE INDEX IF NOT EXISTS idx_oblig_cfr           ON compliance_obligations(cfr
 -- Fast "what needs a run-check?" sweep: rows that have a URL and are stale/unverified.
 CREATE INDEX IF NOT EXISTS idx_oblig_monitorable   ON compliance_obligations(operator_id, last_verified_at)
   WHERE regulatory_url IS NOT NULL;
+-- Resolve a Firecrawl monitor check back to its obligation row in Loop 1.
+CREATE INDEX IF NOT EXISTS idx_oblig_monitor_id    ON compliance_obligations(firecrawl_monitor_id)
+  WHERE firecrawl_monitor_id IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
 -- Append-only scan log: one row per Firecrawl run-check (Loop 1) or discovery
