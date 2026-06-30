@@ -12,12 +12,28 @@ whole compliance-and-title operation:
   (`smepro-doi`), with the hard balance gate and curative resolution before approval.
 - **Monitors** — Firecrawl monitor status; pause/resume.
 
-## Run it (zero install)
+The UI is a faithful **Xcode-style three-pane console** — navigator (left) · editor
+with segmented tabs (center) · inspector (right) — driven by the live data.
+
+## View it — two ways
+
+### A. Zero install (just open a file) ✅
+
+```bash
+cd ios-console
+npm run build        # writes dist/ios-console.html
+```
+
+Double-click **`dist/ios-console.html`** (or drag it into a browser tab). It is a
+single self-contained file — no server, no Node, no network. It runs the *same*
+store + REST logic in the browser against a seed snapshot baked in at build time
+(including the real engine-computed DOI deck). This is the easiest way to see it.
+
+### B. Dev server (live API)
 
 No database, no build step, no dependencies — just Node ≥ 22:
 
 ```bash
-cd ios-console
 npm start            # → http://localhost:8090   (PORT=9000 to change)
 ```
 

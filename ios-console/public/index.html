@@ -3,42 +3,64 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Reporter IOS+ · Management Console</title>
+  <title>IOS+ Management Console</title>
   <link rel="stylesheet" href="/styles.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🛢️</text></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230b5fff'/><text x='16' y='23' font-size='17' font-weight='bold' fill='white' text-anchor='middle' font-family='Arial'>I+</text></svg>" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <span class="logo">IOS<span class="plus">+</span></span>
-      <div class="brand-txt">
-        <strong>Reporter IOS+</strong>
-        <small>Management Console <span class="badge">MVP</span></small>
-      </div>
+  <!-- Toolbar (Xcode-style) -->
+  <div class="toolbar">
+    <div class="traffic"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+    <div class="tb-run">
+      <button id="btnRefresh" class="tb-btn" title="Refresh">▶</button>
+      <button id="btnReset" class="tb-btn" title="Reset demo data">■</button>
     </div>
-    <nav class="tabs" id="tabs">
-      <button data-view="dashboard" class="active">Dashboard</button>
-      <button data-view="compliance">Compliance</button>
-      <button data-view="discovery">Discovery</button>
-      <button data-view="decks">DOI Decks</button>
-      <button data-view="monitors">Monitors</button>
-    </nav>
-    <div class="topbar-right">
-      <span id="health" class="health" title="API status">●</span>
-      <button id="reset" class="btn ghost" title="Reset demo data">Reset</button>
+    <div class="scheme">
+      <span class="app-ico">I+</span>
+      <span class="scheme-name">IOS+ Console</span>
+      <span class="chev">›</span>
+      <span class="scheme-dest" id="operator">op1 · operator</span>
     </div>
-  </header>
-
-  <main id="view" class="view"><div class="loading">Loading…</div></main>
-
-  <div id="toast" class="toast" hidden></div>
-  <div id="modal" class="modal" hidden>
-    <div class="modal-card">
-      <button class="modal-close" id="modalClose">×</button>
-      <div id="modalBody"></div>
+    <div class="status" id="statusbar">
+      <span class="status-main">Operational</span>
+      <span class="status-sub" id="statusSub">loading…</span>
+      <span class="status-warn" id="statusWarn" hidden><span class="tri">⚠</span> <em>0</em></span>
+    </div>
+    <div class="tb-right">
+      <button id="togNav" class="tb-btn layout" title="Hide/show navigator">◧</button>
+      <button id="togInsp" class="tb-btn layout" title="Hide/show inspector">◨</button>
     </div>
   </div>
 
+  <!-- Jump bar -->
+  <div class="jumpbar" id="jumpbar"></div>
+
+  <!-- Body: navigator | editor | inspector -->
+  <div class="body">
+    <aside class="navigator" id="navigator">
+      <div class="nav-icons"><span class="on">▤</span><span>⚑</span><span>⚠</span><span>◷</span></div>
+      <div class="nav-tree" id="navTree"></div>
+      <div class="nav-filter"><input id="navFilter" type="search" placeholder="Filter" /></div>
+    </aside>
+
+    <main class="editor" id="editor">
+      <div class="tabbar" id="tabbar">
+        <button data-section="dashboard" class="active">Dashboard</button>
+        <button data-section="compliance">Compliance</button>
+        <button data-section="discovery">Discovery</button>
+        <button data-section="decks">DOI Decks</button>
+        <button data-section="monitors">Monitors</button>
+      </div>
+      <div class="editor-scroll" id="editorBody"></div>
+    </main>
+
+    <aside class="inspector" id="inspector">
+      <div class="insp-icons"><span class="on">𝓲</span><span>?</span></div>
+      <div class="insp-scroll" id="inspBody"></div>
+    </aside>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
   <script type="module" src="/app.js"></script>
 </body>
 </html>
