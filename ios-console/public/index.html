@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IOS+ Management Console</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230b5fff'/><text x='16' y='23' font-size='16' font-weight='bold' fill='white' text-anchor='middle' font-family='Arial'>I+</text></svg>" />
+</head>
+<body>
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="traffic"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+    <div class="tb-run">
+      <button id="btnRefresh" class="tb-btn" title="Refresh">▶</button>
+      <button id="btnReset" class="tb-btn" title="Reset demo data">■</button>
+    </div>
+    <div class="scheme">
+      <span class="app-ico">I+</span><span class="scheme-name">IOS+ Console</span>
+      <span class="chev">›</span><span class="scheme-dest" id="operator">op1 · operator</span>
+    </div>
+    <div class="status" id="statusbar">
+      <span class="status-main">Operational</span>
+      <span class="status-sub" id="statusSub">loading…</span>
+      <span class="status-warn" id="statusWarn" hidden><span class="tri">⚠</span> <em>0</em></span>
+    </div>
+    <div class="tb-right">
+      <button class="tb-btn" id="btnAdd" title="New run-check / discovery sweep">+</button>
+      <button class="tb-btn" title="">⇄</button>
+      <button class="tb-btn layout" id="togNav" title="Hide/show navigator">▤</button>
+      <button class="tb-btn layout" title="">▥</button>
+      <button class="tb-btn layout" id="togInsp" title="Hide/show inspector">▦</button>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- Navigator -->
+    <aside class="navigator" id="navigator">
+      <div class="nav-icons"><span class="on">▤</span><span>⚑</span><span>⚠</span><span>◇</span><span>◷</span><span>▣</span><span>⬡</span></div>
+      <div class="nav-tree" id="navTree"></div>
+      <div class="nav-filter"><input id="navFilter" type="search" placeholder="Filter" /></div>
+    </aside>
+
+    <!-- Editor (project-editor style) -->
+    <main class="editor">
+      <div class="editor-bar">
+        <span class="eb-nav">‹ ›</span>
+        <span class="eb-crumb" id="ebCrumb">IOS+ Operation</span>
+        <span class="eb-right"><span class="eb-warn" id="ebWarn">⚠ 0</span> <span class="eb-x">›</span> <span>▤</span></span>
+      </div>
+      <div class="tabbar" id="tabbar">
+        <button data-section="dashboard" class="active">Dashboard</button>
+        <button data-section="compliance">Compliance</button>
+        <button data-section="discovery">Discovery</button>
+        <button data-section="decks">DOI Decks</button>
+        <button data-section="monitors">Monitors</button>
+      </div>
+      <div class="subbar" id="subbar"></div>
+      <div class="editor-main">
+        <div class="targets" id="targets"></div>
+        <div class="settings" id="settings"></div>
+      </div>
+    </main>
+
+    <!-- Inspector -->
+    <aside class="inspector" id="inspector">
+      <div class="insp-icons"><span class="on">🛈</span><span>?</span></div>
+      <div class="insp-scroll" id="inspBody"></div>
+    </aside>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

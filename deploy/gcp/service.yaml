@@ -1,0 +1,65 @@
+# Cloud Run service for the Firecrawl MCP server (single-tenant, GCP-managed).
+#
+# The Firecrawl API key is mounted from Secret Manager at runtime — it is never
+# baked into the image or this file. HTTP_STREAMABLE_SERVER=true makes the server
+# use that env key as the default credential, so MCP clients connect to /mcp
+# without needing to know the key.
+#
+# Placeholders to substitute before `gcloud run services replace`:
+#   REGION       e.g. us-central1
+#   PROJECT_ID   your GCP project id
+# (deploy.sh does this substitution for you.)
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: firecrawl-mcp
+  labels:
+    cloud.googleapis.com/location: REGION
+  annotations:
+    run.googleapis.com/ingress: all          # set to internal-and-cloud-load-balancing to lock down
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0" # scale to zero when idle
+        autoscaling.knative.dev/maxScale: "5"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 3600                     # MCP streams can be long-lived
+      containers:
+        - image: REGION-docker.pkg.dev/PROJECT_ID/firecrawl-mcp/firecrawl-mcp:latest
+          ports:
+            - name: http1
+              containerPort: 8080              # Cloud Run injects PORT=8080; node listens on it
+          env:
+            - name: HTTP_STREAMABLE_SERVER
+              value: "true"
+            - name: FIRECRAWL_RETRY_MAX_ATTEMPTS
+              value: "5"
+            - name: FIRECRAWL_CREDIT_WARNING_THRESHOLD
+              value: "2000"
+            - name: FIRECRAWL_CREDIT_CRITICAL_THRESHOLD
+              value: "500"
+            - name: FIRECRAWL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: firecrawl-api-key      # Secret Manager secret id
+                  key: latest
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            timeoutSeconds: 3
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            timeoutSeconds: 3
+            periodSeconds: 30

@@ -99,6 +99,64 @@ Add this to your `./codeium/windsurf/model_config.json`:
 }
 ```
 
+### Running on Claude
+
+Firecrawl works across every Claude surface. Grab a free API key from the [Firecrawl Dashboard](https://www.firecrawl.dev/app/api-keys) and pick the environment you use.
+
+#### Claude Code CLI (recommended)
+
+Add Firecrawl natively with a single command in your terminal:
+
+```bash
+claude mcp add firecrawl-mcp-server -e FIRECRAWL_API_KEY=your_api_key -- npx -y firecrawl-mcp
+```
+
+Replace `your_api_key` with your actual key. Verify the connection with `claude mcp list`, and remove it later with `claude mcp remove firecrawl-mcp-server`.
+
+#### Claude Desktop App
+
+Append the configuration block manually to your local config file:
+
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+Add the following to your `mcpServers` object, then restart Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "firecrawl": {
+      "command": "npx",
+      "args": ["-y", "firecrawl-mcp"],
+      "env": {
+        "FIRECRAWL_API_KEY": "your_api_key"
+      }
+    }
+  }
+}
+```
+
+> See [Usage with Claude Desktop](#usage-with-claude-desktop) below for additional retry and credit-monitoring options.
+
+#### Claude.ai (Web / Custom Connectors)
+
+To use the hosted Firecrawl server without any local setup, add it as a remote connector:
+
+1. On [Claude.ai](https://claude.ai), go to **Settings → Connectors**.
+2. Click **Add custom connector**.
+3. Enter the unified endpoint, with your API key in the path:
+
+   ```
+   https://mcp.firecrawl.dev/YOUR_API_KEY/v2/mcp
+   ```
+
+Once connected (on any surface above), Claude gains Firecrawl's core capabilities, including:
+
+- `firecrawl_scrape` — pull clean, LLM-ready markdown or structured JSON from a single page.
+- `firecrawl_crawl` — walk multiple paths of a domain up to a chosen depth.
+- `firecrawl_map` — generate a quick sitemap of relevant URLs for a site.
+- `firecrawl_search` — search the web and return full page content.
+
 ### Running with Streamable HTTP Local Mode
 
 To run the server using Streamable HTTP locally instead of the default stdio transport:

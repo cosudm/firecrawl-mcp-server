@@ -1,0 +1,3 @@
+# Local state snapshot (seeded at runtime; never commit)
+.data/
+*.log
