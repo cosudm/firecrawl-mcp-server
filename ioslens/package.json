@@ -1,0 +1,20 @@
+{
+  "name": "ioslens",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "iOSLENS — SMEPro Intelligence Orchestration System (IOS+). Governed-intelligence control plane for the Lamar University pilot: the Compliance Decoding Matrix, the iOSLENS decision/persistence engine, the append-only audit store, and the two-layer (Entra + Matrix) MCP authorization server.",
+  "bin": {
+    "ioslens": "bin/ioslens.mjs",
+    "ioslens-migrate": "bin/migrate.mjs"
+  },
+  "scripts": {
+    "start": "node bin/ioslens.mjs",
+    "start:http": "MCP_TRANSPORT=http node bin/ioslens.mjs",
+    "migrate": "node bin/migrate.mjs",
+    "seed": "node bin/migrate.mjs --seed",
+    "test": "node --test",
+    "health": "node bin/ioslens.mjs --health"
+  },
+  "engines": { "node": ">=20" }
+}
