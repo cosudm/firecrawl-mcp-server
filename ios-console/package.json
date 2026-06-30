@@ -1,0 +1,12 @@
+{
+  "name": "ios-console",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reporter IOS+ Management Console (MVP) — operator surface over the SMEPro compliance matrix, DOI title decks, discovery inbox, and Firecrawl monitors. Zero runtime dependencies; reuses the smepro-doi engine.",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=22" }
+}

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reporter IOS+ · Management Console</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🛢️</text></svg>" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">IOS<span class="plus">+</span></span>
+      <div class="brand-txt">
+        <strong>Reporter IOS+</strong>
+        <small>Management Console <span class="badge">MVP</span></small>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-view="dashboard" class="active">Dashboard</button>
+      <button data-view="compliance">Compliance</button>
+      <button data-view="discovery">Discovery</button>
+      <button data-view="decks">DOI Decks</button>
+      <button data-view="monitors">Monitors</button>
+    </nav>
+    <div class="topbar-right">
+      <span id="health" class="health" title="API status">●</span>
+      <button id="reset" class="btn ghost" title="Reset demo data">Reset</button>
+    </div>
+  </header>
+
+  <main id="view" class="view"><div class="loading">Loading…</div></main>
+
+  <div id="toast" class="toast" hidden></div>
+  <div id="modal" class="modal" hidden>
+    <div class="modal-card">
+      <button class="modal-close" id="modalClose">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
