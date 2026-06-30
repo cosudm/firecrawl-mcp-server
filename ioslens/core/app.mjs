@@ -12,8 +12,8 @@ import { createMemoryStore, createPgStore } from '../matrix/store.mjs';
 import { createMemoryAudit, createPgAudit } from '../core/audit.mjs';
 import { createMatrix } from '../matrix/matrix.mjs';
 import { createResolver } from '../core/resolver.mjs';
-import { createMockEntra } from '../flows/entra.mjs';
-import { createMockEthos } from '../flows/ethos.mjs';
+import { createMockEntra, createGraphEntra, createEntraAppTokenProvider } from '../flows/entra.mjs';
+import { createMockEthos, createEthosClient } from '../flows/ethos.mjs';
 import { createTools } from '../mcp/tools.mjs';
 import { createMcpServer, PROTOCOL_VERSION } from '../mcp/server.mjs';
 import { createJwtVerifier, createInsecureDevVerifier } from '../authz/jwt.mjs';
@@ -33,8 +33,23 @@ export async function createApp(config, overrides = {}) {
     : createMemoryAudit();
 
   const matrix = createMatrix(store);
-  const entra = overrides.entra ?? createMockEntra();
-  const ethos = overrides.ethos ?? createMockEthos();
+
+  // Flow A — live Microsoft Graph identity when an App Registration is configured.
+  const graphLive = !!(config.graph?.clientId && config.graph?.clientSecret && config.auth.tenant);
+  const entra =
+    overrides.entra ??
+    (graphLive
+      ? createGraphEntra({
+          tokenProvider: createEntraAppTokenProvider({ tenant: config.auth.tenant, clientId: config.graph.clientId, clientSecret: config.graph.clientSecret }),
+        })
+      : createMockEntra());
+
+  // Flow B — live Ellucian Ethos when a base URL is configured.
+  const ethosLive = !!config.ethos?.baseUrl;
+  const ethos =
+    overrides.ethos ??
+    (ethosLive ? createEthosClient({ baseUrl: config.ethos.baseUrl, apiKey: config.ethos.apiKey }) : createMockEthos());
+
   const resolver = createResolver({ matrix, audit, entra, ethos, activeOnly: config.activeOnly });
 
   const tools = createTools({ matrix, resolver, store, audit });
@@ -51,6 +66,7 @@ export async function createApp(config, overrides = {}) {
     audit: audit.kind,
     auth: config.auth.mode,
     activeOnly: config.activeOnly,
+    flows: { entra: graphLive ? 'graph' : 'mock', ethos: ethosLive ? 'live' : 'mock' },
     embedding: { model: embedder.model, dim: embedder.dim },
     tools: Object.keys(tools),
   });

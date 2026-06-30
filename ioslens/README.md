@@ -147,11 +147,30 @@ boundary (a trigger blocks `UPDATE`/`DELETE` on `audit.decisions`).
    (cached), verifies signature + issuer + audience + expiry, and never opens an
    inbound port to Entra. Same egress-only posture as Entra Connect.
 
-Wire the real flow clients by passing `{ entra, ethos }` overrides to
-`createApp()` — e.g. `createClaimsEntra(jwtClaims)` (identity straight from the
-validated token) and an Ethos REST/OAuth2 client for live context.
-
 See `.env.example` for every setting.
+
+### Live integrations (Flow A, Flow B, Foundry)
+
+All three are wired and selected automatically from config — set the env and the
+app upgrades from mocks to live with no code change:
+
+- **Flow B — Ellucian Ethos** (`ETHOS_BASE_URL` [+ `ETHOS_API_KEY`]): `createEthosClient`
+  authenticates with the Ethos API key, reads the subject's academic programs
+  live, maps them to CIP codes + enrollment status, and returns evidence
+  pointers (URIs + timestamps) — never record bodies. Ethos is the single
+  integration surface to Banner.
+- **Flow A — Microsoft Graph** (`ENTRA_CLIENT_ID` + `ENTRA_CLIENT_SECRET` + `ENTRA_TENANT_ID`):
+  `createGraphEntra` resolves any subject pointer to slow-changing directory
+  facts via Graph `/users/{oid}`, using an app-only client-credentials token.
+  (`createClaimsEntra` is also available for identity straight from the
+  validated JWT.)
+- **Foundry monitor** (`bin/foundry.mjs`, sources via `FOUNDRY_SOURCES`):
+  polls regulatory sources and writes proposed changes into `change_queue`
+  (`pending`, `proposed_by=Foundry`). It is structurally incapable of
+  publishing — a human `Matrix.Admin` approves via `matrix.publish`. Run
+  `node bin/foundry.mjs --once` or set `FOUNDRY_INTERVAL_MS` to poll.
+
+`createApp({ entra, ethos })` still accepts direct overrides for custom clients.
 
 ---
 

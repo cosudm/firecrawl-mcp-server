@@ -38,6 +38,16 @@ export function loadConfig(env = process.env) {
       issuer: env.ENTRA_ISSUER || (tenant ? `https://login.microsoftonline.com/${tenant}/v2.0` : undefined),
       jwksUri: env.ENTRA_JWKS_URI || (tenant ? `https://login.microsoftonline.com/${tenant}/discovery/v2.0/keys` : undefined),
     },
+    // Flow B — live Ellucian Ethos (set ETHOS_BASE_URL to enable; else mock).
+    ethos: {
+      baseUrl: env.ETHOS_BASE_URL || undefined,
+      apiKey: env.ETHOS_API_KEY || undefined,
+    },
+    // Flow A — live Microsoft Graph identity (set ENTRA_CLIENT_ID+SECRET; else mock).
+    graph: {
+      clientId: env.ENTRA_CLIENT_ID || undefined,
+      clientSecret: env.ENTRA_CLIENT_SECRET || undefined,
+    },
     // stdio Layer-1: the launcher supplies a token, or dev roles for offline use.
     stdioToken: env.MCP_STDIO_TOKEN,
     devRoles: (env.MCP_DEV_ROLES || 'Compliance.Read,Compliance.Decide,Audit.Read').split(',').map((s) => s.trim()).filter(Boolean),
